@@ -63,3 +63,5 @@
 # ignore vim swap files
 *.swp
 *.swo
+
+.fake
