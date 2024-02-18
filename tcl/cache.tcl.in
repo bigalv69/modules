@@ -76,7 +76,7 @@ proc getLimitedAccessesInDirectory {modpath} {
                      lappend direlt_list $elt/$eltindir
                   }
                }
-               if {[llength $direlt_list]} {
+               if {[llength $direlt_list] > 0} {
                   lappend full_list {*}$direlt_list
                }
             }
@@ -186,7 +186,7 @@ proc formatModuleCacheContent {modpath} {
    }
 
    # prepend header if some content has been generated
-   if {[string length $content]} {
+   if {[string length $content] != 0} {
       regexp {^\d+\.\d+} {@MODULES_RELEASE@} majmin
       set content "#%Module$majmin$content"
    }
@@ -221,8 +221,8 @@ proc readCacheContent {cachefile} {
             {Cache ERROR}
       # check if min version requirement is met
       } elseif {[versioncmp {@MODULES_RELEASE@} $fhvers] <0} {
-         reportDebug "Cache file $cachefile requires at least Modules version\
-            $fhvers"
+         reportInternalBug "Cache file requires at least Modules version\
+            $fhvers" $cachefile {Cache ERROR}
       } else {
          # set file content as result
          set res $fdata

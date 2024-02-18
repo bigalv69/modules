@@ -1,1 +1,6 @@
-../../modulerc4/intel/2019
+#%Module
+# Dummy modulefile for intel
+
+set version 2019
+set moduledir [file dirname $ModulesCurrentModulefile]
+source $moduledir/common

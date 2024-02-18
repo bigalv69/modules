@@ -1,1 +1,1 @@
-../../../openmpi/4.0/1/README.txt
+This directory has symlinks for flavours

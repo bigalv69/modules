@@ -253,7 +253,7 @@ achieve a specific setup, some additional steps may be required:
 6. Prior running the module sub-command specified as argument, the
    :file:`modulecmd.tcl` script evaluates the global run-command files. These
    files are either the :file:`rc` file in the directory designated by the
-   :instopt:`--etcdir` option, the file(s) designated in the
+   :instopt:`--etcdir` option, the file designated in the
    :envvar:`MODULERCFILE` environment variable or the user-specific RC file
    located in :file:`$HOME/.modulerc`. The RC files are modulefiles (limited
    to a subset of the :ref:`modulefile Tcl
@@ -586,10 +586,8 @@ instance :instopt:`--disable-set-manpath<--enable-set-manpath>`):
 .. instopt:: --enable-new-features
 
  Enable all new features that are disabled by default due to the substantial
- behavior changes they imply on Modules 5. This option is equivalent to the
- cumulative use of
- :instopt:`--with-abort-on-error=load:ml:reload:switch<--with-abort-on-error>`.
- (default=no)
+ behavior changes they imply on Modules 5. This option does not enable other
+ configuration option currently. (default=no)
 
  .. only:: html
 
@@ -602,11 +600,6 @@ instance :instopt:`--disable-set-manpath<--enable-set-manpath>`):
        :instopt:`--enable-extended-default` and
        :instopt:`--enable-advanced-version-spec` are set by default on Modules
        5.
-
-    .. versionchanged:: 5.4
-       Enables *abort on error* behavior on :subcmd:`load` and
-       :subcmd:`switch` sub-commands.
-
 
 .. instopt:: --enable-quarantine-support
 
@@ -675,40 +668,12 @@ instance :instopt:`--disable-set-manpath<--enable-set-manpath>`):
     .. versionchanged:: 5.0
        Configuration option default set to ``no``
 
-.. instopt:: --enable-source-cache
-
- Cache content of files evaluated through :manpage:`source(n)` Tcl command in
- modulefile. When same file is sourced multiple times, cached content is
- reused rather reading file again.
-
- This installation option defines the default value of the
- :mconfig:`source_cache` configuration option which could be changed
- after installation with the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
-
 .. instopt:: --enable-versioning
 
  Append Modules version to installation prefix and deploy a ``versions``
  modulepath shared between all versioning enabled Modules installation. A
  modulefile corresponding to Modules version is added to the shared modulepath
  and enables to switch from one Modules version to another. (default=no)
-
-.. instopt:: --enable-unique-name-loaded
-
- Only allow one module loaded per module name. A conflict is raised when
- loading a module whose name or alternative names are shared by an already
- loaded module. (default=no)
-
- This installation option defines the default value of the
- :mconfig:`unique_name_loaded` configuration option which could be changed
- after installation with the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. instopt:: --enable-vim-addons
 
@@ -748,24 +713,6 @@ instance :instopt:`--disable-set-manpath<--enable-set-manpath>`):
 Optional Packages (the default for each option is displayed within
 parenthesis, to disable an option replace ``with`` by ``without`` for
 instance :instopt:`--without-modulepath<--with-modulepath>`):
-
-.. instopt:: --with-abort-on-error=LIST
-
- When evaluating multiple modulefiles, if one fails abort evaluation sequence
- and withdraw already evaluated modulefiles for listed module sub-commands.
- Sub-commands accepted in LIST are: :subcmd:`load`, :command:`ml`,
- :subcmd:`mod-to-sh`, :subcmd:`purge`, :subcmd:`reload`, :subcmd:`switch`,
- :subcmd:`switch_unload<switch>`, :subcmd:`try-load` and :subcmd:`unload`
- (elements in LIST are separated by ``:``).
- (default=\ ``ml:reload:switch_unload``)
-
- This installation option defines the default value of the
- :mconfig:`abort_on_error` configuration option which could be changed after
- installation with the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. instopt:: --with-avail-output=LIST
 
@@ -979,9 +926,9 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
 
  Specify the content to report on list sub-command regular output in addition
  to the loaded module names. Elements accepted in LIST are: ``header``,
- ``idx``, ``variant``, ``alias``, ``indesym``, ``sym``, ``tag`` and ``key``
- (elements in LIST are separated by ``:``). The order of the elements in LIST
- does not matter. (default=\ ``header:idx:variant:sym:tag:key``)
+ ``idx``, ``variant``, ``sym``, ``tag`` and ``key`` (elements in LIST are
+ separated by ``:``). The order of the elements in LIST does not matter.
+ (default=\ ``header:idx:variant:sym:tag:key``)
 
  This installation option defines the default value of the
  :mconfig:`list_output` configuration option which could be changed after
@@ -994,16 +941,13 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
     .. versionchanged:: 4.8
        Element ``variant`` added and set by default
 
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
-
 .. instopt:: --with-list-terse-output=LIST
 
  Specify the content to report on list sub-command terse output in addition
  to the loaded module names. Elements accepted in LIST are: ``header``,
- ``idx``, ``variant``, ``alias``, ``indesym``, ``sym``, ``tag`` and ``key``
- (elements in LIST are separated by ``:``). The order of the elements in LIST
- does not matter. (default=\ ``header``)
+ ``idx``, ``variant``, ``sym``, ``tag`` and ``key`` (elements in LIST are
+ separated by ``:``). The order of the elements in LIST does not matter.
+ (default=\ ``header``)
 
  This installation option defines the default value of the
  :mconfig:`list_terse_output` configuration option which could be changed
@@ -1015,9 +959,6 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
 
     .. versionchanged:: 4.8
        Element ``variant`` added
-
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
 
 .. instopt:: --with-loadedmodules=MODLIST
 
@@ -1154,20 +1095,6 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
  .. only:: html
 
     .. versionadded:: 4.3
-
-.. instopt:: --with-sticky-purge=VALUE
-
- When unloading a sticky or super-sticky module during a module purge, raise
- an ``error`` or emit a ``warning`` message or be ``silent``.
- (default=\ ``error``)
-
- This installation option defines the default value of the
- :mconfig:`sticky_purge` configuration option which could be changed after
- installation with the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. instopt:: --with-tag-abbrev=ABBRVLIST
 
@@ -1333,9 +1260,6 @@ installation.
 |                                   |                                              | variable and command-line switch             | during init\ | altered   |
 |                                   |                                              |                                              | ialization   |           |
 +===================================+==============================================+==============================================+==============+===========+
-| :mconfig:`abort_on_error`         | ``ml:reload:switch_unload``                  | :instopt:`--with-abort-on-error`,            |              |           |
-|                                   |                                              | :envvar:`MODULES_ABORT_ON_ERROR`             |              |           |
-+-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`advanced_version_spec`  | ``1``                                        | :instopt:`--enable-advanced-version-spec`,   |              |           |
 |                                   |                                              | :envvar:`MODULES_ADVANCED_VERSION_SPEC`      |              |           |
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
@@ -1464,12 +1388,6 @@ installation.
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`siteconfig`             | |file etcdir_siteconfig|                     | :instopt:`--prefix`, :instopt:`--etcdir`     |              | X         |
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
-| :mconfig:`source_cache`           | ``0``                                        | :instopt:`--enable-source-cache`,            |              |           |
-|                                   |                                              | :envvar:`MODULES_SOURCE_CACHE`               |              |           |
-+-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
-| :mconfig:`sticky_purge`           | ``error``                                    | :instopt:`--with-sticky-purge`,              |              |           |
-|                                   |                                              | :envvar:`MODULES_STICKY_PURGE`               |              |           |
-+-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`tag_abbrev`             | auto-loaded=aL:loaded=L:hidden=H:\           | :instopt:`--with-tag-abbrev`,                |              |           |
 |                                   | hidden-loaded=H:forbidden=F:nearly-\         | :envvar:`MODULES_TAG_ABBREV`                 |              |           |
 |                                   | forbidden=nF:sticky=S:super-sticky=sS:\      |                                              |              |           |
@@ -1489,9 +1407,6 @@ installation.
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`term_width`             | ``0``                                        | :envvar:`MODULES_TERM_WIDTH`,                |              |           |
 |                                   |                                              | :option:`--width`                            |              |           |
-+-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
-| :mconfig:`unique_name_loaded`     | ``0``                                        | :instopt:`--enable-unique-name-loaded`,      |              |           |
-|                                   |                                              | :envvar:`MODULES_UNIQUE_NAME_LOADED`         |              |           |
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`unload_match_order`     | ``returnlast``                               | :instopt:`--with-unload-match-order`,        |              |           |
 |                                   |                                              | :envvar:`MODULES_UNLOAD_MATCH_ORDER`         |              |           |

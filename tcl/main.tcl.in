@@ -191,7 +191,7 @@ proc parseModuleCommandArgs {topcall cmd ignerr args} {
                      set nextargisvaltosplit tag_list
                   } else {
                      set tag_list [split [string range $arg 6 end] :]
-                     if {![llength $tag_list]} {
+                     if {[llength $tag_list] == 0} {
                         knerror "Missing value for '--tag' option"
                      }
                   }
@@ -407,18 +407,18 @@ proc module {command args} {
    switch -- $command {
       unload - source - display - initadd - initprepend - initrm - test -\
       is-avail - try-load - load-any {
-         if {![llength $args]} {
+         if {[llength $args] == 0} {
             set argnberr 1
          }
       }
       refresh - reload - aliases - purge - initlist - initclear - autoinit -\
          reset - stash - stashclear - stashlist - cacheclear {
-         if {[llength $args]} {
+         if {[llength $args] != 0} {
             set argnberr 1
          }
       }
       switch {
-         if {![llength $args] || [llength $args] > 2} {
+         if {[llength $args] == 0 || [llength $args] > 2} {
             set argnberr 1
          }
       }
@@ -560,7 +560,7 @@ proc ml {args} {
 
    if {$cmdempty} {
       # consider empty string supplied as first argument as module name
-      if {[llength $fargs]} {
+      if {[llength $fargs] > 0} {
          set cmdvalid 0
       }
       set margs $args
@@ -585,7 +585,7 @@ proc ml {args} {
       # main procedure has already raised error for badly written argument
       # like '-' or '--', but we need here to replay module-specific argument
       # parsing to raise error if some arg are not allowed on unload/load cmd
-      set mlcmd [expr {[llength $modunlist] ? {unload} : {load}}]
+      set mlcmd [expr {[llength $modunlist] > 0 ? {unload} : {load}}]
       lassign [parseModuleCommandArgs 1 $mlcmd 0 {*}$args] show_oneperline\
          show_mtime show_filter search_filter search_match dump_state\
          addpath_pos not_req tag_list fargs
@@ -597,16 +597,16 @@ proc ml {args} {
       pushSettings
 
       # first unload specified modules
-      if {[llength $modunlist]} {
+      if {[llength $modunlist] > 0} {
          set ret [cmdModuleUnload unload match 1 0 0 0 {*}$modunlist]
       }
-      # then load other modules unless unload phase failed and abort mode
-      if {(!$ret || ![commandAbortOnError]) && [llength $modlolist]} {
+      # then load other modules unless unload phase failed
+      if {!$ret && [llength $modlolist] > 0} {
          set ret [cmdModuleLoad load 1 0 0 $tag_list {*}$modlolist]
       }
 
-      # rollback changes if abort mode and any load or unload failed
-      if {$ret && [commandAbortOnError]} {
+      # rollback changes if any load or unload failed
+      if {$ret} {
          restoreSettings
       }
       popSettings
@@ -636,7 +636,6 @@ if {[catch {
    setState cmdline "$argv0 $argv"
 
    # Load extension library if enabled
-   ##nagelfar ignore #6 Strange command
    ##nagelfar ignore +2 Too long line
    @libtclenvmodules@if {[file readable [getConf tcl_ext_lib]]} {
    @libtclenvmodules@   reportDebug "Load Tcl extension library ([getConf tcl_ext_lib])"
@@ -783,7 +782,7 @@ if {[catch {
             -a - --append - -append - --all - -p - --prepend - -prepend -\
             --delim - -delim - --delim=* - -delim=* - --duplicates - --index\
             - --notuasked - --indepth - --no-indepth - --dump-state -\
-            --reset - --tag - --tag=* - --glob {
+            --reset - --tag - --tag=* {
                # command-specific switches interpreted later on
                lappend otherargv $arg
             }
@@ -827,7 +826,8 @@ if {[catch {
             }
             -* {
                # verify current command accepts minus arg (-*)
-               if {![info exists accept_minus_arg] && [llength $otherargv]} {
+               if {![info exists accept_minus_arg] && [llength $otherargv]\
+                  > 0} {
                   set subcmdtest [lindex $otherargv 0]
                   if {$subcmdtest ne {ml}} {
                      lassign [parseModuleCommandName $subcmdtest {}]\
@@ -906,7 +906,7 @@ if {[catch {
                   quarantine"
                unset env($var)
             }
-         } elseif {[string length $var]} {
+         } elseif {[string length $var] > 0} {
             reportWarning "Bad variable name set in MODULES_RUN_QUARANTINE\
                ($var)"
          }

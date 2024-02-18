@@ -21,13 +21,7 @@
 ##########################################################################
 
 proc raiseErrorCount {} {
-   # hold error count raise
-   if {[depthState reportholdid] > 0} {
-      lappend ::g_holdReport([currentState reportholdid]) [list\
-         raiseErrorCount]
-   } else {
-      setState error_count [expr {[getState error_count] + 1}]
-   }
+   setState error_count [expr {[getState error_count] + 1}]
 }
 
 proc renderFalse {} {
@@ -161,12 +155,12 @@ proc renderSettings {} {
       g_newXResources g_delXResources g_shcode_out
 
    # preliminaries if there is stuff to render
-   if {[getState autoinit] || [array size g_stateEnvVars] || [array size\
-      g_stateAliases] || [array size g_newXResources] || [array size\
-      g_stateFunctions] || [array size g_stateCompletes] || [array size\
-      g_delXResources] || [info exists ::g_changeDir] || [info exists\
-      ::g_stdoutPuts] || [info exists ::g_prestdoutPuts] || [info exists\
-      ::g_return_text]} {
+   if {[getState autoinit] || [array size g_stateEnvVars] > 0 ||\
+      [array size g_stateAliases] > 0 || [array size g_newXResources] > 0 ||\
+      [array size g_stateFunctions] > 0 || [array size g_stateCompletes] > 0\
+      || [array size g_delXResources] > 0 || [info exists ::g_changeDir] ||\
+      [info exists ::g_stdoutPuts] || [info exists ::g_prestdoutPuts] ||\
+      [info exists ::g_return_text]} {
       switch -- [getState shelltype] {
          python {
             lappend g_shcode_out {import os}
@@ -437,7 +431,7 @@ proc renderSettings {} {
    }
 
    # preliminaries for x-resources stuff
-   if {[array size g_newXResources] || [array size g_delXResources]} {
+   if {[array size g_newXResources] > 0 || [array size g_delXResources] > 0} {
       switch -- [getState shelltype] {
          python {
             lappend g_shcode_out {import subprocess}
@@ -449,7 +443,7 @@ proc renderSettings {} {
    }
 
    # new x resources
-   if {[array size g_newXResources]} {
+   if {[array size g_newXResources] > 0} {
       # xrdb executable has already be verified in x-resource
       set xrdb [getCommandPath xrdb]
       foreach var [array names g_newXResources] {
@@ -546,7 +540,7 @@ proc renderSettings {} {
       }
    }
 
-   if {[array size g_delXResources]} {
+   if {[array size g_delXResources] > 0} {
       ##nagelfar ignore Found constant
       set xrdb [getCommandPath xrdb]
       set xres_to_del {}
@@ -928,7 +922,7 @@ end}
                "${_mlv}=$::env($_mlrv)" : "${_mlv}="}]
          }
       }
-      if {[llength $_mlre]} {
+      if {[llength $_mlre] > 0} {
          lappend _mlre "__MODULES_QUARANTINE_SET=1"
          set _mlre [linsert $_mlre 0 "env"]
       }
@@ -1214,33 +1208,24 @@ ml <- function(...){
 }
 
 proc get-env {var {valifunset {}}} {
-   if {[isEnvVarDefined $var] && ![isEnvVarCleared $var]} {
+   # return current value if exists and not cleared
+   if {[info exists ::env($var)] && ![info exists ::g_clearedEnvVars($var)]} {
       return $::env($var)
    } else {
       return $valifunset
    }
 }
 
-proc envVarEquals {var_name value} {
-   return [expr {[isEnvVarDefined $var_name] && [get-env $var_name]\
-      eq $value}]
-}
-
-proc isEnvVarDefined {var_name} {
-   return [info exists ::env($var_name)]
-}
-
-proc setEnvVarIfUndefined {var_name value} {
-   if {![isEnvVarDefined $var_name]} {
-      set ::env($var_name) $value
-   }
+proc isProtectedEnvVar {var} {
+   # return if var is protected by protected_envvars config
+   return [expr {$var in [split [getConf protected_envvars] :]}]
 }
 
 proc set-env {var val} {
    set mode [currentState mode]
    reportDebug "$var=$val"
 
-   if {![isEnvVarProtected $var]} {
+   if {![isProtectedEnvVar $var]} {
       # an empty string value means unsetting variable on Windows platform, so
       # call unset-env to ensure variable will not be seen defined yet raising
       # an error when trying to access it
@@ -1249,7 +1234,10 @@ proc set-env {var val} {
       } else {
          interp-sync-env set $var $val
 
-         unsetEnvVarAsCleared $var
+         # variable is not cleared anymore if set again
+         if {[info exists ::g_clearedEnvVars($var)]} {
+            unset ::g_clearedEnvVars($var)
+         }
 
          # propagate variable setup to shell environment on load and unload
          # mode
@@ -1263,37 +1251,19 @@ proc set-env {var val} {
    }
 }
 
-proc isEnvVarProtected {var_name} {
-   return [expr {$var_name in [split [getConf protected_envvars] :]}]
-}
-
 proc reset-to-unset-env {var {val {}}} {
    interp-sync-env set $var $val
    # set var as cleared if val is empty
    if {$val eq {}} {
-      setEnvVarAsCleared $var
+      set ::g_clearedEnvVars($var) 1
    }
-}
-
-proc setEnvVarAsCleared {var_name} {
-   set ::g_clearedEnvVars($var_name) 1
-}
-
-proc unsetEnvVarAsCleared {var_name} {
-   if {[isEnvVarCleared $var_name]} {
-      unset ::g_clearedEnvVars($var_name)
-   }
-}
-
-proc isEnvVarCleared {var_name} {
-   return [info exists ::g_clearedEnvVars($var_name)]
 }
 
 proc unset-env {var {internal 0} {val {}}} {
    set mode [currentState mode]
    reportDebug "$var (internal=$internal, val=$val)"
 
-   if {![isEnvVarProtected $var]} {
+   if {![isProtectedEnvVar $var]} {
       # clear value instead of unset it not to break variable later reference
       # in modulefile. clear whether variable set or not to get a later usage
       # consistent behavior whatever env is setup
@@ -1301,7 +1271,7 @@ proc unset-env {var {internal 0} {val {}}} {
          reset-to-unset-env $var $val
       # internal variables (like ref counter var) are purely unset if they
       # exists
-      } elseif {[isEnvVarDefined $var]} {
+      } elseif {[info exists ::env($var)]} {
          interp-sync-env unset $var
          set intwasset 1
       }
@@ -1341,7 +1311,7 @@ proc getReferenceCountArray {var separator} {
    # get reference counter set in environment
    set sharevar [getModshareVarName $var]
    array set refcount {}
-   if {[isEnvVarDefined $sharevar]} {
+   if {[info exists ::env($sharevar)]} {
       set modsharelist [psplit $::env($sharevar) [getState path_separator]]
       # ignore environment ref count variable if malformed
       if {([llength $modsharelist] % 2) == 0} {
@@ -1353,7 +1323,7 @@ proc getReferenceCountArray {var separator} {
    }
 
    array set countarr {}
-   if {[isEnvVarDefined $var]} {
+   if {[info exists ::env($var)]} {
       # do not skip a bare empty path entry that can also be found in
       # reference counter array (sometimes var is cleared by setting it
       # empty not unsetting it, ignore var in this case)
@@ -1404,7 +1374,7 @@ proc setReferenceCountRecordValue {sharevar countlist} {
    if {[info exists reclist]} {
       set-env $sharevar [pjoin $reclist [getState path_separator]]
    # unset ref count var if found set whereas no counter should be recorded
-   } elseif {[isEnvVarDefined $sharevar]} {
+   } elseif {[info exists ::env($sharevar)]} {
       unset-env $sharevar 1
    }
 }
@@ -1413,7 +1383,7 @@ proc unload-path {cmd mode dflbhv args} {
    reportDebug "($args) cmd=$cmd, mode=$mode, dflbhv=$dflbhv"
 
    lassign [parsePathCommandArgs $cmd $mode $dflbhv {*}$args] separator\
-      allow_dup idx_val ign_refcount glob_match bhv var path_list
+      allow_dup idx_val ign_refcount bhv var path_list
 
    switch -- $bhv {
       noop {
@@ -1445,21 +1415,8 @@ proc unload-path {cmd mode dflbhv args} {
    # save initial variable content to match index arguments
    set dir_list [split [get-env $var] $separator]
    # detect if empty env value means empty path entry
-   if {![llength $dir_list] && [info exists countarr()]} {
+   if {[llength $dir_list] == 0 && [info exists countarr()]} {
       lappend dir_list {}
-   }
-
-   # match glob pattern against existing values
-   if {$glob_match} {
-      set new_path_list [list]
-      foreach glob_pattern $path_list {
-         set pattern_match_list [lsearch -glob -all -inline $dir_list\
-            $glob_pattern]
-         if {[llength $pattern_match_list]} {
-            lappend new_path_list {*}$pattern_match_list
-         }
-      }
-      set path_list $new_path_list
    }
 
    # build list of index to remove from variable
@@ -1522,7 +1479,7 @@ proc unload-path {cmd mode dflbhv args} {
    }
 
    # update variable if some element need to be removed
-   if {[llength $del_idx_list]} {
+   if {[llength $del_idx_list] > 0} {
       set del_idx_list [lsort -integer -unique $del_idx_list]
       set newpath [list]
       set nbelem [llength $dir_list]
@@ -1537,7 +1494,7 @@ proc unload-path {cmd mode dflbhv args} {
    }
 
    # set env variable and corresponding reference counter in any case
-   if {![llength $newpath]} {
+   if {[llength $newpath] == 0} {
       unset-env $var
    } else {
       set-env $var [join $newpath $separator]
@@ -1560,7 +1517,7 @@ proc add-path {cmd mode dflbhv args} {
       set bhv $dflbhv
    } else {
       lassign [parsePathCommandArgs $cmd $mode $dflbhv {*}$args] separator\
-         allow_dup idx_val ign_refcount glob_match bhv var path_list
+         allow_dup idx_val ign_refcount bhv var path_list
    }
 
    # clean any previously defined pushenv stack
@@ -1619,7 +1576,6 @@ proc parsePathCommandArgs {cmd mode dflbhv args} {
    set allow_dup 0
    set idx_val 0
    set ign_refcount 0
-   set glob_match 0
    set bhv $dflbhv
    foreach arg $args {
       # everything passed after variable name is considered a value
@@ -1679,14 +1635,6 @@ proc parsePathCommandArgs {cmd mode dflbhv args} {
                   set allow_dup 1
                }
             }
-            --glob {
-               # raise warning when option is not used by remove-path
-               if {$cmd eq {remove-path}} {
-                  set glob_match 1
-               } else {
-                  reportWarning "--glob option has no effect on $cmd"
-               }
-            }
             -d - -delim - --delim {
                set next_is_delim 1
             }
@@ -1741,16 +1689,9 @@ proc parsePathCommandArgs {cmd mode dflbhv args} {
    }
 
    # some options cannot be mixed
-   if {$idx_val != 0 && ([info exists bhvopt] && $bhvopt ne\
+   if {$idx_val != 0 && ([info exists bhvopt] && $bhvopt !=\
       {--noop-on-unload})} {
       knerror "--index and $bhvopt options cannot be simultaneously set"
-   }
-   if {$idx_val && $glob_match} {
-      knerror "--index and --glob options cannot be simultaneously set"
-   }
-   if {$glob_match && ([info exists bhvopt] && $bhvopt in\
-      {--append-on-unload --prepend-on-unload})} {
-      knerror "--glob and $bhvopt options cannot be simultaneously set"
    }
 
    # set list of value to add
@@ -1776,11 +1717,10 @@ proc parsePathCommandArgs {cmd mode dflbhv args} {
    }
 
    reportDebug "(delim=$delim, allow_dup=$allow_dup, idx_val=$idx_val,\
-      ign_refcount=$ign_refcount, glob_match=$glob_match, bhv=$bhv, var=$var,\
-      val=$val_list, nbval=[llength $val_list])"
+      ign_refcount=$ign_refcount, bhv=$bhv, var=$var, val=$val_list,\
+      nbval=[llength $val_list])"
 
-   return [list $delim $allow_dup $idx_val $ign_refcount $glob_match $bhv\
-      $var $val_list]
+   return [list $delim $allow_dup $idx_val $ign_refcount $bhv $var $val_list]
 }
 
 # get list of Modules-specific environment variable in glob form

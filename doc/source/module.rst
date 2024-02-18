@@ -136,15 +136,14 @@ configuration` for detailed information.
 
 Afterward, :file:`modulecmd.tcl` sources rc files which contain global,
 user and *modulefile* specific setups. These files are interpreted as
-*modulefiles*. See :ref:`modulefile(5)` for detailed information.
+*modulefiles*. See :ref:`modulefile(4)` for detailed information.
 
 Upon invocation of :file:`modulecmd.tcl` module run-command files are sourced
 in the following order:
 
-1. Global RC file(s) as specified by :envvar:`MODULERCFILE` variable or
-   |file etcdir_rc|. If a path element in :envvar:`MODULERCFILE` points to a
-   directory, the :file:`modulerc` file in this directory is used as a global
-   RC file.
+1. Global RC file as specified by :envvar:`MODULERCFILE` variable or
+   |file etcdir_rc|. If :envvar:`MODULERCFILE` points to a directory, the
+   :file:`modulerc` file in this directory is used as global RC file.
 
 2. User specific module RC file :file:`$HOME/.modulerc`
 
@@ -247,7 +246,7 @@ switches are accepted:
  module name. Default version is the explicitly set default version or also
  the implicit default version if the configuration option
  :mconfig:`implicit_default` is enabled (see :ref:`Locating Modulefiles`
- section in the :ref:`modulefile(5)` man page for further details on implicit
+ section in the :ref:`modulefile(4)` man page for further details on implicit
  default version).
 
  .. only:: html
@@ -263,16 +262,6 @@ switches are accepted:
  *modulefile* will be loaded even if it comes in conflict with another loaded
  *modulefile* or that a *modulefile* will be unloaded even if it is required
  as a prereq by another *modulefile*.
-
- On :subcmd:`load`, :command:`ml`, :subcmd:`mod-to-sh`, :subcmd:`purge`,
- :subcmd:`reload`, :subcmd:`switch`, :subcmd:`try-load` and :subcmd:`unload`
- sub-commands applies *continue on error* behavior when an error occurs even
- if :mconfig:`abort_on_error` option is enabled.
-
- On :command:`ml`, :subcmd:`purge`, :subcmd:`reload`, :subcmd:`reset`,
- :subcmd:`restore`, :subcmd:`stash`, :subcmd:`stashpop`, :subcmd:`switch` and
- :subcmd:`unload` sub-commands, unloads modulefile anyway even if an
- evaluation error occurs.
 
  On :subcmd:`clear` sub-command, skip the confirmation dialog and proceed.
 
@@ -299,12 +288,6 @@ switches are accepted:
 
     .. versionchanged:: 5.2
        Support for :subcmd:`mod-to-sh` sub-command added
-
-    .. versionchanged:: 5.4
-       Unloads modulefile anyway even if an evaluation error occurs
-
-    .. versionchanged:: 5.4
-       Disables :mconfig:`abort_on_error` configuration option
 
 .. option:: --help, -h
 
@@ -362,7 +345,7 @@ switches are accepted:
 
  On :subcmd:`avail` sub-command, display only the highest numerically sorted
  version of each module name (see :ref:`Locating Modulefiles` section in the
- :ref:`modulefile(5)` man page).
+ :ref:`modulefile(4)` man page).
 
  .. only:: html
 
@@ -422,7 +405,7 @@ switches are accepted:
  and *variantifspec*.
 
  Accepted elements in *LIST* for :subcmd:`list` sub-command are: *header*,
- *idx*, *variant*, *alias*, *indesym*, *sym*, *tag* and *key*.
+ *idx*, *variant*, *sym*, *tag* and *key*.
 
  The order of the elements in *LIST* does not matter. Module names are the
  only content reported when *LIST* is set to an empty value.
@@ -448,9 +431,6 @@ switches are accepted:
 
     .. versionchanged:: 5.3.1
        Element *indesym* added for :subcmd:`avail` sub-command
-
-    .. versionchanged:: 5.4
-       Elements *alias* and *indesym* added for :subcmd:`list` sub-command
 
 .. option:: --paginate
 
@@ -597,12 +577,11 @@ Module Sub-Commands
     .. versionchanged:: 4.6
        Option :option:`--all`/:option:`-a` added
 
-.. subcmd:: append-path [options] variable value...
+.. subcmd:: append-path [-d C|--delim C|--delim=C] [--duplicates] variable value...
 
  Append *value* to environment *variable*. The *variable* is a colon, or
  *delimiter*, separated list. See :mfcmd:`append-path` in the
- :ref:`modulefile(5)` man page for *options* description and further
- explanation.
+ :ref:`modulefile(4)` man page for further explanation.
 
  When :subcmd:`append-path` is called as a module sub-command, the reference
  counter variable, which denotes the number of times *value* has been added to
@@ -773,23 +752,6 @@ Module Sub-Commands
  reported in addition to currently set :file:`modulecmd.tcl` options.
 
  Existing option *names* are:
-
- .. mconfig:: abort_on_error
-
-  List of module sub-commands that abort evaluation sequence when an error is
-  raised by an evaluated module. Evaluations already performed are withdrawn
-  and remaining modules to evaluate are skipped.
-
-  This configuration option can be changed at installation time with
-  :instopt:`--with-abort-on-error` option. The
-  :envvar:`MODULES_ABORT_ON_ERROR` environment variable is defined by
-  :subcmd:`config` sub-command when changing this configuration option from
-  its default value. See :envvar:`MODULES_ABORT_ON_ERROR` description for
-  details.
-
-  .. only:: html
-
-     .. versionadded:: 5.4
 
  .. mconfig:: advanced_version_spec
 
@@ -1235,7 +1197,7 @@ Module Sub-Commands
 
  .. mconfig:: rcfile
 
-  Location of global run-command file(s).
+  Global run-command file location.
 
   This configuration option is unset by default. The :envvar:`MODULERCFILE`
   environment variable is defined by :subcmd:`config` sub-command when
@@ -1345,37 +1307,6 @@ Module Sub-Commands
   time with :instopt:`--prefix` or :instopt:`--etcdir` options. The value of
   this option cannot be altered.
 
- .. mconfig:: source_cache
-
-  Cache content of files evaluated in modulefile through :manpage:`source(n)`
-  Tcl command.
-
-  Default value is ``0``. It can be changed at installation time with
-  :instopt:`--enable-source-cache` option. The :envvar:`MODULES_SOURCE_CACHE`
-  environment variable is defined by :subcmd:`config` sub-command when
-  changing this configuration option from its default value. See
-  :envvar:`MODULES_SOURCE_CACHE` description for details.
-
-  .. only:: html
-
-     .. versionadded:: 5.4
-
- .. mconfig:: sticky_purge
-
-  Error behavior when unloading sticky or super-sticky module during a module
-  :subcmd:`purge`.
-
-  Raise an ``error`` (default) or emit a ``warning`` or be ``silent``. It can
-  be changed at installation time with :instopt:`--with-sticky-purge` option.
-  The :envvar:`MODULES_STICKY_PURGE` environment variable is defined by
-  :subcmd:`config` sub-command when changing this configuration option from
-  its default value. See :envvar:`MODULES_STICKY_PURGE` description for
-  details.
-
-  .. only:: html
-
-     .. versionadded:: 5.4
-
  .. mconfig:: tag_abbrev
 
   Abbreviations to use to report module tags.
@@ -1454,21 +1385,6 @@ Module Sub-Commands
 
      .. versionadded:: 4.7
 
- .. mconfig:: unique_name_loaded
-
-  Only one module loaded per module name.
-
-  Default value is ``0``. It can be changed at installation time with
-  :instopt:`--enable-unique-name-loaded` option. The
-  :envvar:`MODULES_UNIQUE_NAME_LOADED` environment variable is defined by
-  :subcmd:`config` sub-command when changing this configuration option from
-  its default value. See :envvar:`MODULES_UNIQUE_NAME_LOADED` description for
-  details.
-
-  .. only:: html
-
-     .. versionadded:: 5.4
-
  .. mconfig:: unload_match_order
 
   Unload firstly loaded or lastly loaded module matching request.
@@ -1537,10 +1453,6 @@ Module Sub-Commands
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
 
- When several *modulefiles* are passed, they are evaluated sequentially in the
- specified order. If one modulefile evaluation raises an error, display
- sequence continues.
-
 .. subcmd:: edit modulefile
 
  Open *modulefile* for edition with text editor command designated by the
@@ -1563,16 +1475,12 @@ Module Sub-Commands
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
 
- When several *modulefiles* are passed, they are evaluated sequentially in the
- specified order. If one modulefile evaluation raises an error, help sequence
- continues.
-
 .. subcmd:: info-loaded modulefile
 
  Returns the names of currently loaded modules matching passed *modulefile*.
  Returns an empty string if passed *modulefile* does not match any loaded
  modules. See :mfcmd:`module-info loaded<module-info>` in the
- :ref:`modulefile(5)` man page for further explanation.
+ :ref:`modulefile(4)` man page for further explanation.
 
  .. only:: html
 
@@ -1641,7 +1549,7 @@ Module Sub-Commands
 
  Returns a true value if any of the listed *modulefiles* exists in enabled
  :envvar:`MODULEPATH`. Returns a false value otherwise. See :mfcmd:`is-avail`
- in the :ref:`modulefile(5)` man page for further explanation.
+ in the :ref:`modulefile(4)` man page for further explanation.
 
  The parameter *modulefile* may also be a symbolic modulefile name or a
  modulefile alias. It may also leverage a specific syntax to finely select
@@ -1655,7 +1563,7 @@ Module Sub-Commands
 
  Returns a true value if any of the listed *modulefiles* has been loaded or if
  any *modulefile* is loaded in case no argument is provided. Returns a false
- value otherwise. See :mfcmd:`is-loaded` in the :ref:`modulefile(5)` man page
+ value otherwise. See :mfcmd:`is-loaded` in the :ref:`modulefile(4)` man page
  for further explanation.
 
  The parameter *modulefile* may also be a symbolic modulefile name or a
@@ -1670,7 +1578,7 @@ Module Sub-Commands
 
  Returns a true value if any of the listed *collections* exists or if any
  *collection* exists in case no argument is provided. Returns a false value
- otherwise. See :mfcmd:`is-saved` in the :ref:`modulefile(5)` man page for
+ otherwise. See :mfcmd:`is-saved` in the :ref:`modulefile(4)` man page for
  further explanation.
 
  .. only:: html
@@ -1682,7 +1590,7 @@ Module Sub-Commands
  Returns a true value if any of the listed *directories* has been enabled in
  :envvar:`MODULEPATH` or if any *directory* is enabled in case no argument is
  provided. Returns a false value otherwise. See :mfcmd:`is-used` in the
- :ref:`modulefile(5)` man page for further explanation.
+ :ref:`modulefile(4)` man page for further explanation.
 
  .. only:: html
 
@@ -1788,15 +1696,6 @@ Module Sub-Commands
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
 
- When several *modulefiles* are passed, they are loaded sequentially in the
- specified order. If one modulefile evaluation raises an error, load sequence
- continues: loaded modules prior the evaluation error are kept loaded and
- sequence is resumed with the load of remaining modulefile in list.
- Conversely, load sequence is aborted and already loaded modulefiles are
- withdrawn if :subcmd:`load` sub-command is defined in
- :mconfig:`abort_on_error` configuration option and :option:`--force` option
- is not set.
-
  The :option:`--tag` option accepts a list of module tags to apply to
  *modulefile* once loaded. If module is already loaded, tags from *taglist*
  are added to the list of tags already applied to this module.
@@ -1810,16 +1709,13 @@ Module Sub-Commands
     .. versionchanged:: 5.1
        Option :option:`--tag` added
 
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
 
 .. subcmd:: load-any [options] modulefile...
 
  Load into the shell environment one of the *modulefile* specified. Try to
  load each *modulefile* specified in list from the left to the right until
  one got loaded or is found already loaded. Do not complain if *modulefile*
- cannot be found. But if its evaluation fails, an error is reported and next
- modulefile in list is evaluated.
+ cannot be found but if its evaluation fails an error is reported.
 
  :subcmd:`load-any` command accepts the following options:
 
@@ -1875,21 +1771,9 @@ Module Sub-Commands
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
 
- When several *modulefiles* are passed, they are evaluated sequentially in the
- specified order. If one modulefile evaluation raises an error, mod-to-sh
- sequence continues: environment change from modules evaluated prior the
- error are preserved and sequence is resumed with the evaluation of remaining
- modulefile in list. Conversely, mod-to-sh sequence is aborted and changes
- from already evaluated modules are withdrawn if :subcmd:`mod-to-sh`
- sub-command is defined in :mconfig:`abort_on_error` configuration option and
- :option:`--force` option is not set.
-
  .. only:: html
 
     .. versionadded:: 5.2
-
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
 
 .. subcmd:: path modulefile
 
@@ -1925,12 +1809,11 @@ Module Sub-Commands
        *pattern* may include variant specification or extra specifier to
        filter results
 
-.. subcmd:: prepend-path [options] variable value...
+.. subcmd:: prepend-path [-d C|--delim C|--delim=C] [--duplicates] variable value...
 
  Prepend *value* to environment *variable*. The *variable* is a colon, or
  *delimiter*, separated list. See :mfcmd:`prepend-path` in the
- :ref:`modulefile(5)` man page for *options* description and further
- explanation.
+ :ref:`modulefile(4)` man page for further explanation.
 
  When :subcmd:`prepend-path` is called as a module sub-command, the reference
  counter variable, which denotes the number of times *value* has been added to
@@ -1949,24 +1832,13 @@ Module Sub-Commands
 
  Unload all loaded *modulefiles*.
 
- When the :option:`--force` option is set, also unload `sticky modules`_,
- modulefiles that are depended by non-unloadable modules and modulefiles
- raising an evaluation error.
-
- If one modulefile unload evaluation raises an error, purge sequence
- continues: unloaded modules prior the evaluation error are kept unloaded and
- sequence is resumed with the unload of remaining modulefiles. Conversely,
- purge sequence is aborted and already unloaded modulefiles are restored if
- :subcmd:`purge` sub-command is defined in :mconfig:`abort_on_error`
- configuration option and :option:`--force` option is not set.
+ When the :option:`--force` option is set, also unload `sticky modules`_ and
+ modulefiles that are depended by non-unloadable modules.
 
  .. only:: html
 
     .. versionchanged:: 4.7
        Option :option:`--force`/:option:`-f` added
-
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
 
 .. subcmd:: refresh
 
@@ -1986,10 +1858,6 @@ Module Sub-Commands
  evaluated in ``refresh`` mode. Such loaded modules are listed in the
  :envvar:`__MODULES_LMREFRESH` environment variable.
 
- If one modulefile evaluation raises an error, refresh sequence continues:
- environment changes from refreshed modules prior the evaluation error are
- preserved and sequence is resumed with the refresh of remaining modulefiles.
-
  .. only:: html
 
     .. versionchanged:: 4.0
@@ -2001,7 +1869,7 @@ Module Sub-Commands
     .. versionchanged:: 5.2
        Only evaluate modules listed in :envvar:`__MODULES_LMREFRESH`
 
-.. subcmd:: reload [-f]
+.. subcmd:: reload
 
  Unload then load all loaded *modulefiles*.
 
@@ -2009,32 +1877,15 @@ Module Sub-Commands
  *modulefiles* have unsatisfied constraint corresponding to the
  :mfcmd:`prereq` and :mfcmd:`conflict` they declare.
 
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
-
- If one modulefile load or unload evaluation raises an error, reload sequence
- aborts: environment changes coming from already evaluated modulefiles are
- withdrawn and remaining modulefile evaluations are skipped. Conversely, if
- :subcmd:`reload` is removed from :mconfig:`abort_on_error` configuration
- option list or if :option:`--force` option is set, reload sequence continues:
- already achieved module evaluations are kept and reload sequence is resumed
- with the remaining modulefiles.
-
  .. only:: html
 
     .. versionadded:: 4.0
 
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
-
-    .. versionchanged:: 5.4
-       Option :option:`--force`/:option:`-f` added
-
-.. subcmd:: remove-path [options] variable value...
+.. subcmd:: remove-path [-d C|--delim C|--delim=C] [--index] variable value...
 
  Remove *value* from the colon, or *delimiter*, separated list in environment
- *variable*. See :mfcmd:`remove-path` in the :ref:`modulefile(5)` man page for
- *options* description and further explanation.
+ *variable*. See :mfcmd:`remove-path` in the :ref:`modulefile(4)` man page for
+ further explanation.
 
  When :subcmd:`remove-path` is called as a module sub-command, the reference
  counter variable, which denotes the number of times *value* has been added to
@@ -2048,16 +1899,13 @@ Module Sub-Commands
     .. versionchanged:: 5.0
        *value* is removed whatever its reference counter value
 
-.. subcmd:: reset [-f]
+.. subcmd:: reset
 
  Restore initial environment, which corresponds to the loaded state after
  :ref:`Modules initialization<Package Initialization>`.
 
  :subcmd:`reset` sub-command restores the environment definition found in
  :envvar:`__MODULES_LMINIT` environment variable.
-
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
 
  :subcmd:`reset` behavior can be changed with :mconfig:`reset_target_state`.
  This configuration option is set by default to ``__init__``, which
@@ -2070,10 +1918,7 @@ Module Sub-Commands
 
     .. versionadded:: 5.2
 
-    .. versionchanged:: 5.4
-       Option :option:`--force`/:option:`-f` added
-
-.. subcmd:: restore [-f] [collection]
+.. subcmd:: restore [collection]
 
  Restore the environment state as defined in *collection*. If *collection*
  name is not specified, then it is assumed to be the *default* collection if
@@ -2101,14 +1946,6 @@ Module Sub-Commands
  collection will fail if the configuration option :mconfig:`implicit_default`
  is disabled.
 
- If one modulefile load or unload evaluation raises an error, restore sequence
- continues: environment changes from modules unloaded or loaded prior the
- evaluation error are preserved and sequence is resumed with the unload or
- load of remaining modulefiles.
-
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
-
  .. only:: html
 
     .. versionadded:: 4.0
@@ -2116,9 +1953,6 @@ Module Sub-Commands
     .. versionchanged:: 5.2
        Restore initial environment when *collection* name is ``__init__`` or
        when no collection name is specified and no *default* collection exists
-
-    .. versionchanged:: 5.4
-       Option :option:`--force`/:option:`-f` added
 
 .. subcmd:: rm [--auto|--no-auto] [-f] modulefile...
 
@@ -2293,12 +2127,6 @@ Module Sub-Commands
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
 
- When several *modulefiles* are passed, they are evaluated sequentially in the
- specified order. If one modulefile evaluation raises an error, source
- sequence continues: environment changes from modules sourced prior the
- evaluation error are preserved and sequence is resumed with the source of
- remaining modulefile in list.
-
  .. only:: html
 
     .. versionadded:: 4.0
@@ -2306,7 +2134,7 @@ Module Sub-Commands
     .. versionchanged:: 5.2
        Accept modulefile specification as argument
 
-.. subcmd:: stash [-f]
+.. subcmd:: stash
 
  :subcmd:`Save<save>` current environment in a stash collection then
  :subcmd:`reset` to initial environment.
@@ -2319,15 +2147,9 @@ Module Sub-Commands
  If :envvar:`MODULES_COLLECTION_TARGET` is set, a suffix equivalent to the
  value of this variable will be appended to the stash collection file name.
 
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
-
  .. only:: html
 
     .. versionadded:: 5.2
-
-    .. versionchanged:: 5.4
-       Option :option:`--force`/:option:`-f` added
 
 .. subcmd:: stashclear
 
@@ -2349,7 +2171,7 @@ Module Sub-Commands
 
     .. versionadded:: 5.2
 
-.. subcmd:: stashpop [-f] [stash]
+.. subcmd:: stashpop [stash]
 
  :subcmd:`Restore<restore>` *stash* collection then delete corresponding
  collection file.
@@ -2363,15 +2185,9 @@ Module Sub-Commands
  value of this variable will be appended to the stash collection file name to
  restore.
 
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
-
  .. only:: html
 
     .. versionadded:: 5.2
-
-    .. versionchanged:: 5.4
-       Option :option:`--force`/:option:`-f` added
 
 .. subcmd:: stashrm [stash]
 
@@ -2440,24 +2256,6 @@ Module Sub-Commands
  *modulefile* once loaded. If module is already loaded, tags from *taglist*
  are added to the list of tags already applied to this module.
 
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
-
- If unload evaluation of *modulefile1* raises an error, switch sequence
- aborts: no environment change from *modulefile1* unload is applied and load
- of *modulefile2* is skipped. Conversely, if ``switch_unload`` value is
- removed from :mconfig:`abort_on_error` configuration option list (and
- ``switch`` value is not set there) or if :option:`--force` option is set,
- switch sequence continues. If *modulefile1* is tagged ``super-sticky``,
- switch sequence aborts in any case.
-
- If load evaluation of *modulefile2* raises an error, switch sequence
- continues: environment changes from *modulefile1* unload are applied but not
- those from failed *modulefile2* load. Conversely, whole switch sequence is
- aborted and unloaded *modulefile1* is restored if :subcmd:`switch`
- sub-command is defined in :mconfig:`abort_on_error` configuration option and
- :option:`--force` option is not set.
-
  .. only:: html
 
     .. versionchanged:: 4.2
@@ -2467,9 +2265,6 @@ Module Sub-Commands
     .. versionchanged:: 5.1
        Option :option:`--tag` added
 
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
-
 .. subcmd:: test modulefile...
 
  Execute and display results of the Module-specific tests for the
@@ -2478,10 +2273,6 @@ Module Sub-Commands
  The parameter *modulefile* may also be a symbolic modulefile name or a
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
-
- When several *modulefiles* are passed, they are evaluated sequentially in the
- specified order. If one modulefile evaluation raises an error, test sequence
- continues.
 
  .. only:: html
 
@@ -2519,24 +2310,12 @@ Module Sub-Commands
  *modulefile* once loaded. If module is already loaded, tags from *taglist*
  are added to the list of tags already applied to this module.
 
- When several *modulefiles* are passed, they are try-loaded sequentially in
- the specified order. If one modulefile evaluation raises an error, try-load
- sequence continues: loaded modules prior the evaluation error are kept loaded
- and sequence is resumed with the load of remaining modulefile in list.
- Conversely, try-load sequence is aborted and already loaded modulefiles are
- withdrawn if :subcmd:`try-load` sub-command is defined in
- :mconfig:`abort_on_error` configuration option and :option:`--force` option
- is not set.
-
  .. only:: html
 
     .. versionadded:: 4.8
 
     .. versionchanged:: 5.1
        Option :option:`--tag` added
-
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
 
 .. subcmd:: unload [--auto|--no-auto] [-f] modulefile...
 
@@ -2546,26 +2325,11 @@ Module Sub-Commands
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
 
- When the :option:`--force` option is set, unload modulefiles anyway even if
- an evaluation error occurs.
-
- When several *modulefiles* are passed, they are unloaded sequentially in the
- specified order. If one modulefile evaluation raises an error, unload
- sequence continues: unloaded modules prior the evaluation error are kept
- unloaded and sequence is resumed with the unload of remaining modulefile in
- list. Conversely, unload sequence is aborted and already unloaded modulefiles
- are restored if :subcmd:`unload` sub-command is defined in
- :mconfig:`abort_on_error` configuration option and :option:`--force` option
- is not set.
-
  .. only:: html
 
     .. versionchanged:: 4.2
        Options :option:`--auto`, :option:`--no-auto`,
        :option:`--force`/:option:`-f` added
-
-    .. versionchanged:: 5.4
-       Support for :mconfig:`abort_on_error` configuration option added
 
 .. subcmd:: unuse directory...
 
@@ -2788,15 +2552,15 @@ context. Extra specifiers are an extra query to list available modulefiles
 based on their content definition. They rely on the :ref:`Extra match search`
 mechanism that collects content of available modulefiles.
 
-Extra specifier can be set with the ``element:name[,name,...]`` syntax where
-*element* is a Tcl modulefile command and *name* an item defined by this
-command. Depending on the kind of Tcl modulefile command, *name* can refer to
-an environment variable, a shell alias, a module specification, etc.
+Extra specifier can be set with the ``element:name`` syntax where *element* is
+a Tcl modulefile command and *name* an item defined by this command.
+Depending on the kind of Tcl modulefile command, *name* can refer to an
+environment variable, a shell alias, a module specification, etc.
 
 Supported extra specifier *elements* are:
 
 * ``variant``, ``complete``, ``uncomplete``, ``set-alias``, ``unset-alias``,
-  ``set-function``, ``unset-function``, ``chdir``, ``family``, ``tag``
+  ``set-function``, ``unset-function``, ``chdir``, ``family``
 * ``setenv``, ``unsetenv``, ``append-path``, ``prepend-path``, ``remove-path``
   and ``pushenv``: these elements related to environment variable handling may
   also be aliased ``envvar``
@@ -2819,14 +2583,9 @@ a ``module switch`` command. ``switch`` is an alias that matches both
 ``switch-off`` and ``switch-on`` elements. ``require`` and ``incompat``
 *elements* do not match module commands where ``--not-req`` option is set.
 
-When several *names* are set on one *element* criterion (e.g.,
-``env:PATH,LD_LIBRARY_PATH``), they act as an *OR* operation. Which means
-modules listed in result are those matching any of the *element* *names*
-defined.
-
-When several extra specifiers are set on a module search query (e.g.,
-``env:PATH env:LD_LIBRARY_PATH``), they act as an *AND* operation. Which means
-modules listed in result are those matching all extra specifiers defined.
+When several extra specifiers are set on a module search query, they act as an
+*AND* operation. Which means modules listed in result are those matching all
+extra specifiers defined.
 
 Module specification used as *name* value for some extra specifier *elements*
 may leverage :ref:`Advanced module version specifiers` syntax. However if a
@@ -2844,13 +2603,6 @@ if an unknown extra specifier *element* is defined in search query.
 .. only:: html
 
    .. versionadded:: 5.3
-
-   .. versionchanged:: 5.4
-      Extra specifier ``tag`` added
-
-   .. versionchanged:: 5.4
-      Multiple names may be set on one extra specifier criterion to select
-      modules matching any of these names
 
 
 .. _Module tags:
@@ -3034,11 +2786,6 @@ variant with ``value1`` and ``value2`` as available values. On a module
 selection context, only the last specified value is retained. Which means on
 previous example that ``bar`` variant is set to ``value2``.
 
-When searching for available modules, multiple values may be set on one
-variant criterion, which matches modules that provides any of these variant
-values. For instance ``bar=value1,value2`` will return modules defining a
-``bar`` variant with either ``value1`` or ``value2`` as available value.
-
 Module variants are reported along the module they are associated to on
 :subcmd:`list` sub-command results. They are also reported on :subcmd:`avail`
 sub-command if specified in search query or added to the element to report in
@@ -3067,10 +2814,6 @@ Variant shortcut and color rendering do not apply on JSON output.
       Variants specified in :subcmd:`avail`, :subcmd:`whatis` or
       :subcmd:`paths` search query interpreted to filter results
 
-   .. versionchanged:: 5.4
-      Multiple values may be set on one variant search criterion to select
-      modules providing any of these variant values
-
 
 .. _Extra match search:
 
@@ -3095,8 +2838,8 @@ Extra match search is triggered when:
   to collect variant information then match them against variant specified in
   query
 * :ref:`Extra specifier` is specified in search query: extra match search is
-  triggered to collect commands used in modulefiles or modulercs then match
-  them against extra specifier query
+  triggered to collect commands used in modulefiles then match them against
+  extra specifier query
 
 If search query does not contain an extra query and if variant information
 should not be reported, no extra match search is performed. If search query
@@ -3112,10 +2855,6 @@ evaluation mode.
 Modulefiles tagged *forbidden* are excluded from extra match search
 evaluation. Thus they are excluded from result when this mechanism is
 triggered.
-
-No *scan* modulefile evaluation is performed if search query is only composed
-of ``tag`` extra specifier. Module tags are defined in modulercs thus no
-modulefile evaluation is required to get tags applying to a modulefile.
 
 As extra match search implies additional modulefile evaluations, it is advised
 to build and use :ref:`Module cache` to improve search speed.
@@ -3656,22 +3395,6 @@ ENVIRONMENT
        Variable renamed from ``MODULES_LMCONFLICT`` to
        ``__MODULES_LMCONFLICT``
 
-.. envvar:: __MODULES_LMEXTRATAG
-
- A colon separated list of the tags corresponding to all loaded *modulefiles*
- that have been set through the :option:`--tag` option. Each element in this
- list starts by the name of the loaded *modulefile* followed by all explicitly
- set tags applying to it. The loaded modulefile and its tags are separated by
- the ampersand character.
-
- This environment variable is intended for :command:`module` command internal
- use to distinguish from all tags those that have been specifically set with
- :option:`--tag` option.
-
- .. only:: html
-
-    .. versionadded:: 5.1
-
 .. envvar:: __MODULES_LMINIT
 
  A colon separated list describing the modulepaths that have been enabled and
@@ -3754,24 +3477,21 @@ ENVIRONMENT
        Variable renamed from ``MODULES_LMSOURCESH`` to
        ``__MODULES_LMSOURCESH``
 
-.. envvar:: __MODULES_LMSTICKYRULE
+.. envvar:: __MODULES_LMEXTRATAG
 
- A colon separated list of the sticky or super-sticky tag definitions applying
- to loaded *modulefiles*. Each element in this list starts by the name of the
- loaded *modulefile* followed by the sticky tag name and the module
- specifications on which the tag applies. These loaded modulefiles and sticky
- tag definitions are separated by the ampersand character. Tag name and module
- specifications on which it applies are separated by the pipe character.
-
- When stickiness applies specifically to the loaded module name and version,
- sticky rule is not recorded in ``__MODULES_LMSTICKYRULE``.
+ A colon separated list of the tags corresponding to all loaded *modulefiles*
+ that have been set through the :option:`--tag` option. Each element in this
+ list starts by the name of the loaded *modulefile* followed by all explicitly
+ set tags applying to it. The loaded modulefile and its tags are separated by
+ the ampersand character.
 
  This environment variable is intended for :command:`module` command internal
- use to get knowledge of the stickiness scope when sticky module is changed.
+ use to distinguish from all tags those that have been specifically set with
+ :option:`--tag` option.
 
  .. only:: html
 
-    .. versionadded:: 5.4
+    .. versionadded:: 5.1
 
 .. envvar:: __MODULES_LMTAG
 
@@ -3937,47 +3657,12 @@ ENVIRONMENT
 
 .. envvar:: MODULERCFILE
 
- The location of a global run-command file(s) containing *modulefile* specific
+ The location of a global run-command file containing *modulefile* specific
  setup. See `Modulecmd startup`_ section for detailed information.
-
- Several global run-command files may be defined in this environment variable
- by separating each of them by colon character.
 
  This environment variable value supersedes the default value set in the
  :mconfig:`rcfile` configuration option. It can be defined with the
  :subcmd:`config` sub-command.
-
-.. envvar:: MODULES_ABORT_ON_ERROR
-
- A colon separated list of the module sub-commands that abort their evaluation
- sequence when an error is raised by an evaluated module. When error occurs,
- evaluations already done are withdrawn and the remaining modules to evaluate
- are skipped.
-
- Accepted sub-commands that can be set in value list are:
-
- * :subcmd:`load`
- * :command:`ml`
- * :subcmd:`mod-to-sh`
- * :subcmd:`purge`
- * :subcmd:`reload`
- * :subcmd:`switch`
- * :subcmd:`switch_unload<switch>`
- * :subcmd:`try-load`
- * :subcmd:`unload`
-
- Module sub-commands not configured to follow the *abort on error* behavior,
- apply the *continue on error* behavior. In this case if one modulefile
- evaluation fails, sequence continues with remaining modulefiles. When
- :option:`--force` option is used, *continue on error* behavior applies.
-
- This environment variable value supersedes the default value set in the
- :mconfig:`abort_on_error` configuration option. It can be defined with the
- :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. envvar:: MODULES_ADVANCED_VERSION_SPEC
 
@@ -4444,7 +4129,7 @@ ENVIRONMENT
 
  Defines (if set to ``1``) or not (if set to ``0``) an implicit default
  version for modules without a default version explicitly defined (see
- :ref:`Locating Modulefiles` section in the :ref:`modulefile(5)` man page).
+ :ref:`Locating Modulefiles` section in the :ref:`modulefile(4)` man page).
 
  Without either an explicit or implicit default version defined a module must
  be fully qualified (version should be specified in addition to its name) to
@@ -4499,12 +4184,9 @@ ENVIRONMENT
 
  Accepted elements that can be set in value list are:
 
- * ``alias``: module aliases targeting loaded modules.
  * ``header``: sentence to introduce the list of loaded modules or to state
    that no modules are loaded currently.
  * ``idx``: index position of each loaded module.
- * ``indesym``: symbolic versions reported independently from the loaded
-   module they are attached to.
  * ``key``: legend appended at the end of the output to explain it.
  * ``variant``: variant values selected for loaded modules.
  * ``sym``: symbolic versions associated with loaded modules.
@@ -4524,9 +4206,6 @@ ENVIRONMENT
 
     .. versionchanged:: 4.8
        Element ``variant`` added
-
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
 
 .. envvar:: MODULES_LIST_TERSE_OUTPUT
 
@@ -4550,9 +4229,6 @@ ENVIRONMENT
 
     .. versionchanged:: 4.8
        Element ``variant`` added
-
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
 
 .. envvar:: MODULES_MCOOKIE_CHECK
 
@@ -4863,34 +4539,6 @@ ENVIRONMENT
 
     .. versionadded:: 4.3
 
-.. envvar:: MODULES_SOURCE_CACHE
-
- If set to ``1``, cache content of files evaluated in modulefile through
- :manpage:`source(n)` Tcl command. When same file is sourced multiple times,
- cached content is reused rather reading file again.
-
- This environment variable value supersedes the default value set in the
- :mconfig:`source_cache` configuration option. It can be defined with the
- :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
-
-.. envvar:: MODULES_STICKY_PURGE
-
- When unloading a sticky or super-sticky module during a module
- :subcmd:`purge`, raise an ``error`` or emit a ``warning`` message or be
- ``silent``.
-
- This environment variable value supersedes the default value set in the
- :mconfig:`sticky_purge` configuration option. It can be defined with the
- :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
-
 .. envvar:: MODULES_TAG_ABBREV
 
  Specifies the abbreviation strings used to report module tags (see `Module
@@ -4975,20 +4623,6 @@ ENVIRONMENT
  .. only:: html
 
     .. versionadded:: 4.7
-
-.. envvar:: MODULES_UNIQUE_NAME_LOADED
-
- If set to ``1``, allows only one module loaded per module name. A conflict is
- raised when loading a module whose name or alternative names are shared by an
- already loaded module.
-
- This environment variable value supersedes the default value set in the
- :mconfig:`unique_name_loaded` configuration option. It can be defined with
- the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. envvar:: MODULES_UNLOAD_MATCH_ORDER
 
@@ -5113,7 +4747,7 @@ FILES
  to enable the default modulepaths, load the default modules and set
  :command:`module` command configuration.
 
- :file:`initrc` is a :ref:`modulefile(5)` so it is written as a Tcl script and
+ :file:`initrc` is a :ref:`modulefile(4)` so it is written as a Tcl script and
  defines modulepaths to enable with :mfcmd:`module use<module>`, modules to
  load with :mfcmd:`module load<module>` and configuration to apply with
  :subcmd:`module config<config>`. As any modulefile :file:`initrc` must begin
@@ -5180,5 +4814,5 @@ FILES
 SEE ALSO
 --------
 
-:ref:`ml(1)`, :ref:`modulefile(5)`
+:ref:`ml(1)`, :ref:`modulefile(4)`
 

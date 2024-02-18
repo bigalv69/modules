@@ -49,7 +49,7 @@ proc __reportDebug {message {showcaller 1} {caller _undef_}} {
 }
 
 # alternative procedure used when debug is disabled
-proc __reportDebugNop {message {showcaller 1} {caller _undef_}} {}
+proc __reportDebugNop {args} {}
 
 proc reportWarning {message {recordtop 0}} {
    reportError $message $recordtop WARNING wa 0
@@ -103,23 +103,11 @@ proc __reportErrorAndExit {message} {
 }
 
 proc reportInternalBug {message {modfile {}} {title {Module ERROR}}} {
-   reportError [formatInternalBugMsg $message $modfile] 0 $title me
-}
-
-proc reportInternalBugWarning {message {modfile {}} {title {Module\
-   WARNING}}} {
-   reportError [formatInternalBugMsg $message $modfile] 0 $title wa 0
-}
-
-proc formatInternalBugMsg {message modfile} {
    if {$modfile ne {}} {
-      set message [formatMessageInModule $message $modfile]
+      append message "\nIn '$modfile'"
    }
-   return "$message\nPlease contact <[getConf contact]>"
-}
-
-proc formatMessageInModule {message modfile} {
-   return "$message\nIn '$modfile'"
+   append message "\nPlease contact <[getConf contact]>"
+   reportError $message 0 $title me
 }
 
 proc reportInfo {message {title INFO}} {
@@ -182,7 +170,7 @@ proc reportModuleEval {} {
                   $::g_moduleHiddenEval($evalid:$context)] msgrecidlist
             }
 
-            if {[llength $msgrecidlist]} {
+            if {[llength $msgrecidlist] > 0} {
                set moddesiglist {}
                foreach msgrecid $msgrecidlist {
                   lappend moddesiglist [getModuleDesignation $msgrecid]
@@ -297,15 +285,8 @@ proc __reportSeparateNextContent {} {
 
 # save message for block rendering
 proc recordMessage {message {recordtop 0}} {
-   set recid [expr {$recordtop ? [topState msgrecordid] : [currentState\
-      msgrecordid]}]
-
-   if {$recid eq [currentState reportholdrecid]} {
-      lappend ::g_holdReport([currentState reportholdid]) [list\
-         recordMessage $message $recordtop]
-   } else {
-      lappend ::g_msgRecord($recid) $message
-   }
+   lappend ::g_msgRecord([expr {$recordtop ? [topState msgrecordid] :\
+      [currentState msgrecordid]}]) $message
 }
 
 # check if some msg have been recorded for current evaluation
@@ -333,7 +314,7 @@ proc formatErrStackTrace {errmsg loc {cmdlist {}}} {
    # get list of modulecmd.tcl internal procedure to filter out from stack
    # also add the way subcmds are launched through module proc ($cmdprocname)
    # skip this when no interp command list is provided
-   if {[llength $cmdlist]} {
+   if {[llength $cmdlist] > 0} {
       lassign [getDiffBetweenList [list {*}[info commands] {*}[info procs]\
          {$cmdprocname}] $cmdlist] filtercmdlist keepcmdlist
    } else {
@@ -341,11 +322,8 @@ proc formatErrStackTrace {errmsg loc {cmdlist {}}} {
    }
 
    # define commands to filter out from bottom of stack
-   set filtercmdendlist [list {eval [getModuleContent\
-      $::ModulesCurrentModulefile]} "source $loc" {uplevel 1 source\
-      $siteconfig} {eval $cachecontent}]
-   # define commands to filter out from middle of stack
-   set filtercmdmidlist [list {interp eval $itrp $::source_cache($filename)}]
+   set filtercmdendlist [list {eval $modcontent} "source $loc" {uplevel 1\
+      source $siteconfig} {eval $cachecontent}]
 
    # filter out modulecmd internal references at beginning of stack
    set internals 1
@@ -382,16 +360,6 @@ proc formatErrStackTrace {errmsg loc {cmdlist {}}} {
          set errmsg [string replace $errmsg $beffootidx end]
       } else {
          set internals 0
-      }
-   }
-
-   # filter out modulecmd internal references in middle of stack
-   foreach filtercmdmid $filtercmdmidlist {
-      set filterstartidx [string first \"$filtercmdmid\" $errmsg]
-      if {$filterstartidx != -1} {
-         set filterendidx [expr {[string first $splitstr $errmsg\
-            $filterstartidx] + [string length $splitstr] - 1}]
-         set errmsg [string replace $errmsg $filterstartidx $filterendidx]
       }
    }
 
@@ -435,9 +403,9 @@ proc sgr {keylist str {himatchmap {}} {othkeylist {}}} {
             }
          }
       }
-      if {![llength $othkeylist]} {
+      if {[llength $othkeylist] == 0} {
          # highlight matching substring
-         if {[llength $himatchmap]} {
+         if {[llength $himatchmap] > 0} {
             set str [string map $himatchmap $str]
          }
          if {[info exists sgrset]} {
@@ -476,7 +444,7 @@ proc sgr {keylist str {himatchmap {}} {othkeylist {}}} {
                }
             }
             # no need to look at next match string if this one was found
-            if {[llength $hiidxlist]} {
+            if {[llength $hiidxlist] > 0} {
                break
             }
          }
@@ -710,8 +678,7 @@ proc initErrorReport {} {
             initProcReportTrace isVerbosityLevel reportSeparateNextContent\
             getState setState unsetState lappendState lpopState currentState\
             depthState isStateDefined isStateEqual sgr getConf setConf\
-            unsetConf lappendConf getCallingProcName isEnvVarDefined\
-            envVarEquals]
+            unsetConf lappendConf getCallingProcName]
 
          foreach prc [info procs] {
             if {$prc ni $excl_prc_list} {
@@ -952,19 +919,19 @@ proc getConIsLoadedMsg {conlist {loading 0}} {
    return "Conflicting [join $condesiglist { and }] $is $loaded"
 }
 
-proc getForbiddenMsg {mod fpmod} {
+proc getForbiddenMsg {mod} {
    set msg "Access to module [getModuleDesignation spec $mod 2] is denied"
-   set extramsg [getModuleTagProp $mod $fpmod forbidden message]
+   set extramsg [getModuleTagProp $mod forbidden message]
    if {$extramsg ne {}} {
       append msg \n$extramsg
    }
    return $msg
 }
 
-proc getNearlyForbiddenMsg {mod fpmod} {
-   set after [getModuleTagProp $mod $fpmod nearly-forbidden after]
+proc getNearlyForbiddenMsg {mod} {
+   set after [getModuleTagProp $mod nearly-forbidden after]
    set msg "Access to module will be denied starting '$after'"
-   set extramsg [getModuleTagProp $mod $fpmod nearly-forbidden message]
+   set extramsg [getModuleTagProp $mod nearly-forbidden message]
    if {$extramsg ne {}} {
       append msg \n$extramsg
    }
@@ -1024,7 +991,7 @@ proc formatListEltToDisplay {elt eltsgr eltsuffix sym_list symsgr show_syms\
    sgrdef tag_list show_tags vr_list vrsgr show_vrs {himatchmap {}}\
    {himatcharrvrmap {}} {himatcharrvrvalmap {}}} {
    # fetch sgr codes from tags to apply directly on main element
-   if {$show_tags && [llength $tag_list]} {
+   if {$show_tags && [llength $tag_list] > 0} {
       # if more codes than character in elt, additional codes apply to the
       # side tag list
       lassign [getTagSgrForModname $tag_list [string length $elt]] tagsgrlist\
@@ -1054,7 +1021,7 @@ proc formatListEltToDisplay {elt eltsgr eltsuffix sym_list symsgr show_syms\
    append dispsgr $eltsuffix
 
    # format variant list if any
-   if {$show_vrs && [llength $vr_list]} {
+   if {$show_vrs && [llength $vr_list] > 0} {
       array set himatchvrvalarr $himatcharrvrvalmap
       array set himatchvrarr $himatcharrvrmap
       set commasgr [sgr se ,]
@@ -1091,7 +1058,7 @@ proc formatListEltToDisplay {elt eltsgr eltsuffix sym_list symsgr show_syms\
             set hivrmap {}
             set hivrvalmap {}
          }
-         if {[string length $vrnameset]} {
+         if {[string length $vrnameset] > 0} {
             append vrssgr [sgr $vrsgr $vrnameset $hivrmap]
          }
          append vrssgr [sgr $vrsgr [lindex $vrsgrvalues 0] $hivrvalmap]
@@ -1107,7 +1074,7 @@ proc formatListEltToDisplay {elt eltsgr eltsuffix sym_list symsgr show_syms\
    }
 
    # format remaining sym list
-   if {$show_syms && [llength $sym_list]} {
+   if {$show_syms && [llength $sym_list] > 0} {
       # track if a symbol has been reported excluding sym for alias '@'
       if {![info exists ::g_used_sym_nocolor] && ([llength $sym_list] > 1 ||
          [lindex $sym_list 0] ne {@})} {
@@ -1131,7 +1098,7 @@ proc formatListEltToDisplay {elt eltsgr eltsuffix sym_list symsgr show_syms\
    }
 
    # format tag list if any remaining
-   if {$show_tags && [llength $tag_list]} {
+   if {$show_tags && [llength $tag_list] > 0} {
       append disp " <[join $tag_list :]>"
       set tagssgr " [sgr se <]"
       foreach tag $tag_list {
@@ -1186,7 +1153,7 @@ proc formatListEltToLongDisplay {elt eltsgr eltsuffix sym_list symsgr mtime\
    incr displen [string length $disp]
 
    # format remaining sym list
-   if {[llength $sym_list]} {
+   if {[llength $sym_list] > 0} {
       set symslen [string length [join $sym_list :]]
       foreach sym $sym_list {
          if {![info exists colonsgr]} {
@@ -1207,8 +1174,8 @@ proc formatListEltToLongDisplay {elt eltsgr eltsuffix sym_list symsgr mtime\
 }
 
 proc formatArrayValToJson {vallist} {
-   return [expr {[llength $vallist] ? "\[ \"[join $vallist {", "}]\" \]" :\
-      {[]}}]
+   return [expr {[llength $vallist] > 0 ? "\[ \"[join $vallist {", "}]\" \]"\
+      : {[]}}]
 }
 
 proc formatObjectValToJson {objlist} {
@@ -1273,7 +1240,7 @@ proc prepareMapToHightlightVariant {args} {
    if {[sgr hi {}] ne {}} {
       foreach modspec $args {
          foreach vrspec [getVariantListFromVersSpec $modspec] {
-            set vrvalues [lassign $vrspec vrname vrisbool]
+            lassign $vrspec vrname vrvalue vrisbool
             if {![info exists vrname_map($vrname)]} {
                set maplist [list $vrname [sgr hi $vrname]]
                # also highlight shortcut if any
@@ -1285,14 +1252,12 @@ proc prepareMapToHightlightVariant {args} {
             }
             # adapt variant value to highlight if boolean
             set maplist {}
-            foreach vrvalue $vrvalues {
-               if {$vrisbool} {
-                  set vrshort [expr {$vrvalue ? {+} : {-}}]$vrname
-                  lappend maplist $vrshort [sgr hi $vrshort]
-                  set vrvalue [expr {$vrvalue ? {on} : {off}}]
-               }
-               lappend maplist $vrvalue [sgr hi $vrvalue]
+            if {$vrisbool} {
+               set vrshort [expr {$vrvalue ? {+} : {-}}]$vrname
+               lappend maplist $vrshort [sgr hi $vrshort]
+               set vrvalue [expr {$vrvalue ? {on} : {off}}]
             }
+            lappend maplist $vrvalue [sgr hi $vrvalue]
             lappend vrval_map($vrname) {*}$maplist
          }
       }
@@ -1312,7 +1277,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
    # is some module variant specified in search query
    set variant_spec_in_query 0
    foreach modspec $search_queries {
-      if {[llength [getVariantListFromVersSpec $modspec]]} {
+      if {[llength [getVariantListFromVersSpec $modspec]] > 0} {
          set variant_spec_in_query 1
          break
       }
@@ -1351,7 +1316,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
 
    # treat elements in specified order if any
    ##nagelfar ignore #2 Badly formed if statement
-   foreach elt [if {![llength $mod_list_order]} {array names mod_list}\
+   foreach elt [if {[llength $mod_list_order] == 0} {array names mod_list}\
       {set mod_list_order}] {
       if {$report_variant} {
          set vr_list [getVariantList $elt [expr {$json ? 4 : 7}] 0\
@@ -1359,8 +1324,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
       }
       set sym_list [getVersAliasList $elt]
       # fetch tags but clear excluded tag
-      set tag_list [replaceFromList [getTagList $elt [lindex $mod_list($elt)\
-         2]] $excluded_tag]
+      set tag_list [replaceFromList [getTagList $elt] $excluded_tag]
       # abbreviate tags unless for json output
       if {!$json} {
          set tag_list [abbrevTagList $tag_list]
@@ -1418,7 +1382,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
                if {!$alias_colored} {
                   lappend sym_list @
                   # track use of '@' sym to add it to the output key
-                  if {$report_sym && ![info exists ::g_used_alias_nocolor]} {
+                  if {![info exists ::g_used_alias_nocolor]} {
                      set ::g_used_alias_nocolor 1
                   }
                }
@@ -1459,7 +1423,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
    } else {
       set display_list {}
       # dictionary-sort results unless if output order is specified
-      if {![llength $mod_list_order]} {
+      if {[llength $mod_list_order] == 0} {
          set clean_list [lsort -dictionary $clean_list]
       }
       foreach disp $clean_list {
@@ -1473,7 +1437,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
    }
 
    # output table header if needed and not yet done
-   if {[llength $display_list] && $show_mtime && ![isStateDefined\
+   if {[llength $display_list] > 0 && $show_mtime && ![isStateDefined\
       theader_shown]} {
       setState theader_shown 1
       displayTableHeader {*}$theader_cols
@@ -1486,7 +1450,7 @@ proc reportModules {search_queries header hsgrkey hstyle show_mtime show_idx\
 
 proc showModulePath {} {
    set modpathlist [getModulePathList]
-   if {[llength $modpathlist]} {
+   if {[llength $modpathlist] > 0} {
       report {Search path for module files (in search order):}
       foreach path $modpathlist {
          report "  [sgr mp $path]"
@@ -1801,7 +1765,7 @@ proc displayKey {} {
       }
    }
 
-   if {[llength $display_list]} {
+   if {[llength $display_list] > 0} {
       # display header
       report Key:
       # display key content
@@ -1816,7 +1780,7 @@ proc displayConfig {val env_var {asked 0} {trans {}} {locked 0}} {
    # get overridden value and know what has overridden it
    if {$asked} {
       set defby " (cmd-line)"
-   } elseif {$env_var ne {} && !$locked && [isEnvVarDefined $env_var]} {
+   } elseif {$env_var ne {} && !$locked && [info exists ::env($env_var)]} {
       set defby " (env-var)"
    } elseif {$locked} {
       set defby " (locked)"
@@ -2005,8 +1969,7 @@ Switches:
   -p | --prepend  Prepend directory to MODULEPATH
   --auto          Enable automated module handling mode
   --no-auto       Disable automated module handling mode
-  -f | --force    By-pass dependency consistency, abort on error or
-                  confirmation dialog
+  -f | --force    By-pass dependency consistency or confirmation dialog
   --tag=LIST      Apply tag to loading module on 'load', 'try-load', 'load-any'
                   or 'switch' sub-commands (LIST is made of tag names
                   separated by ':')
@@ -2035,19 +1998,33 @@ Options:
 # create appropriate message and kind of report when a requirement is not
 # satisfied
 proc reportMissingPrereqError {curmodnamevr args} {
-   if {[isModuleEvaluated reqlo $curmodnamevr {*}$args]} {
-      set msg [getErrReqLoMsg $args]
-   } else {
-      set retiseval [isModuleEvaluated any $curmodnamevr {*}$args]
+   set retisreqlo [isModuleEvaluated reqlo $curmodnamevr {*}$args]
+   # report message on currently evaluated module message block
+   if {![set retiseval [isModuleEvaluated any $curmodnamevr {*}$args]] ||\
+      [currentState msgrecordid] ne [topState msgrecordid] || !$retisreqlo} {
+
       # more appropriate msg if an evaluation was attempted or is by-passed
       set msg [expr {$retiseval || [getState force] ? [getReqNotLoadedMsg\
          $args] : [getErrPrereqMsg $args]}]
+      # still proceed if force mode enabled
+      if {[getState force]} {
+         reportWarning $msg
+      # no error raise if done later
+      } elseif {$retisreqlo} {
+         reportError $msg
+      } else {
+         knerror $msg MODULES_ERR_GLOBAL
+      }
    }
-   # still proceed if force mode enabled
-   if {[getState force]} {
-      reportWarning $msg
-   } else {
-      knerror $msg MODULES_ERR_GLOBAL
+
+   # raise reqlo-specific msg to top level if attempted
+   if {$retisreqlo} {
+      set msg [getErrReqLoMsg $args]
+      if {[getState force]} {
+         reportWarning $msg 1
+      } else {
+         knerror $msg MODULES_ERR_GLOBALTOP
+      }
    }
 }
 

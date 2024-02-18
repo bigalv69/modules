@@ -75,42 +75,6 @@ Specification
     - as the module was tagged not to be unloaded by default
     - user should know he/she has done something specific
 
-- Reporting an error during a ``purge`` may be considered inappropriate
-
-  - as purge cannot unload the sticky, so it may be considered normal not to
-    be able to unload the loaded sticky or super-sticky modules
-  - a configuration option :mconfig:`sticky_purge` is introduced on Modules
-    5.4 to define behavior when facing sticky/super-sticky modules during a
-    ``purge``:
-
-    - when set to ``error`` (default), and error is raised
-    - when set to ``warning``, a warning message is reported, no error exit
-      code
-    - when set to ``silent``, no message reported, no error exit code
-
-  - Even when ``sticky_purge`` is set to ``silent``, a warning message is
-    reported when unload of sticky module is forced during a purge.
-
-- Module specification on which stickiness is defined is recorded in
-  environment when loading a sticky or super-sticky module
-
-  - This is introduced on Modules 5.4
-  - With :envvar:`__MODULES_LMSTICKYRULE` environment variable
-  - This change is made to determine if a sticky module is reloading, based on
-    the sticky rule definition
-  - It was previously made with an evaluation of modulerc files toward the
-    currently loaded sticky module. But this methodology was not able to
-    handle virtual modules whose modulefile is defined outside of enabled
-    modulepaths
-  - If stickiness is defined over a specific module name and version, sticky
-    rule definition is not exported in user environment when loading module.
-    This way we know stickiness reloads if exact same module name and version
-    reloads
-  - If several generic sticky rules applies to the loading module, all of them
-    are recorded in user environment
-  - When stickiness is set with ``--tag`` option, it applies to the module
-    name and version, thus no rule need to be recorded in loaded environment
-
 
 Current limitations
 -------------------
@@ -120,15 +84,5 @@ Current limitations
   - For instance ``module-tag sticky foo/1.0`` and ``module-version foo/1.0 default``
   - If specified swapped-on module is the generic module name, for instance *foo*
   - ``switch`` sub-command raises an error even if the sticky module is the default version (either implicit or explicitly set) for this module
-
-- When swapping a sticky module defined over a full path modulefile by another
-  in different modulepath but with same module name and version
-
-  - This switched-on module is currently considered as the sticky module
-    reloading
-
-- When swapping a sticky module by itself but specified as full path module
-  swap command is not able to detect same module is reloading
-
 
 .. vim:set tabstop=2 shiftwidth=2 expandtab autoindent:

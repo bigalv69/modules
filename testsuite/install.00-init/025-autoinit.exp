@@ -27,7 +27,7 @@ set bad_cmd "$error_msgs: Invalid command 'foo'"
 # The tests
 #
 
-if {$verbose} {
+if {$verbose > 0} {
    send_user "\tChecking basic set of module commands\n"
 }
 

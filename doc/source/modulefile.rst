@@ -1,4 +1,4 @@
-.. _modulefile(5):
+.. _modulefile(4):
 
 modulefile
 ==========
@@ -105,44 +105,32 @@ the *modulefile* is being loaded.
  has been overloaded similar to the :mfcmd:`continue` and :mfcmd:`exit`
  commands to have the effect of causing the module not to be listed as loaded
  and not affect other modules being loaded concurrently. All non-environment
- commands within the module will be performed up to this point. Processing
- will continue on to the next module on the command line unless if
- :mconfig:`abort_on_error` configuration option is enabled for running module
- sub-command. The :mfcmd:`break` command will only have this effect if not
- used within a Tcl loop though.
+ commands within the module will be performed up to this point and processing
+ will continue on to the next module on the command line. The :mfcmd:`break`
+ command will only have this effect if not used within a Tcl loop though.
 
  An example: Suppose that a full selection of *modulefiles* are needed for
  various different architectures, but some of the *modulefiles* are not
  needed and the user should be alerted. Having the unnecessary *modulefile*
- be a link to the following ``notavail`` *modulefile* will perform the task
+ be a link to the following notavail *modulefile* will perform the task
  as required.
 
  .. code-block:: tcl
 
-      #%Module
-
-      proc ModulesHelp {} {
-          puts stderr {This module does nothing but alert the user}
+      #%Module1.0
+      ## notavail modulefile
+      ##
+      proc ModulesHelp { } {
+          puts stderr "This module does nothing but alert the user"
           puts stderr "that the [module-info name] module is not available"
       }
 
-      module-whatis {Notifies user that module is not available.}
-
+      module-whatis "Notifies user that module is not available."
       set curMod [module-info name]
-      if {[module-info mode load]} {
+      if { [ module-info mode load ] } {
           puts stderr "Note: '$curMod' is not available for [uname sysname]."
       }
       break
-
- Modulefile using :mfcmd:`break` command when unloading may be unloaded anyway
- if :option:`--force` option is set. To forbid the unload of a modulefile, it
- is recommended to tag it ``super-sticky`` with :mfcmd:`module-tag` command.
-
- .. only:: html
-
-    .. versionchanged:: 5.4
-       Breaking modulefile is unloaded anyway when :option:`--force` option is
-       set
 
 .. mfcmd:: chdir directory
 
@@ -207,11 +195,10 @@ the *modulefile* is being loaded.
 
  This is not a modules specific command but another overloaded Tcl command
  and is similar to the :mfcmd:`break` or :mfcmd:`continue` commands. However,
- this command will cause the immediate cessation of this module. Any
- additional modules on the command line will not be evaluated even if the
- :mconfig:`abort_on_error` configuration option is disabled for running
- module sub-command. This module and the subsequent modules will not be listed
- as loaded. No environment commands will be performed in the current module.
+ this command will cause the immediate cessation of this module and any
+ additional ones on the command line. This module and the subsequent
+ modules will not be listed as loaded. No environment commands will be
+ performed in the current module.
 
 .. mfcmd:: family name
 
@@ -354,9 +341,8 @@ the *modulefile* is being loaded.
  definition of an implicit prereq or conflict requirement onto specified
  modules.
 
- On ``try-load`` sub-command, *modulefiles* are considered optional prereq
- requirement. However an error is raised if they cannot be loaded unless if
- they are not found or forbidden.
+ On ``try-load`` sub-command, if specified *modulefile* is not found thus
+ loaded, no implicit prereq requirement is defined over this module.
 
  The ``load-any`` sub-command loads one *modulefile* from the specified list.
  An error is obtained if no *modulefile* from the list can be loaded. No
@@ -510,16 +496,11 @@ the *modulefile* is being loaded.
  :ref:`Module tags` section in :ref:`module(1)`.
 
  The parameter *modulefile* may leverage a specific syntax to finely select
- module version (see `Advanced module version specifiers`_ section below). It
- may also be a full path file name to precisely designate one module in a
- specific modulepath.
+ module version (see `Advanced module version specifiers`_ section below).
 
  .. only:: html
 
     .. versionadded:: 4.6
-
-    .. versionchanged:: 5.4
-       Full path file name may be used to designate *modulefile*
 
 .. mfcmd:: module-hide [options] modulefile...
 
@@ -598,8 +579,6 @@ the *modulefile* is being loaded.
  The parameter *modulefile* may also be a symbolic modulefile name or a
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
- Moreover it may also be a full path file name to precisely designate one
- module in a specific modulepath.
 
  .. only:: html
 
@@ -607,9 +586,6 @@ the *modulefile* is being loaded.
 
     .. versionchanged:: 4.7
        Option ``--hidden-loaded`` added.
-
-    .. versionchanged:: 5.4
-       Full path file name may be used to designate *modulefile*
 
 .. mfcmd:: module-info option [info-args]
 
@@ -797,8 +773,6 @@ the *modulefile* is being loaded.
  The parameter *modulefile* may also be a symbolic modulefile name or a
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
- Moreover it may also be a full path file name to precisely designate one
- module in a specific modulepath.
 
  Tags inherited from other modulefile commands or module states cannot be set
  with :mfcmd:`module-tag`. Otherwise an error is returned. Those special tags
@@ -818,9 +792,6 @@ the *modulefile* is being loaded.
 
     .. versionchanged:: 5.1
        Tag ``keep-loaded`` added
-
-    .. versionchanged:: 5.4
-       Full path file name may be used to designate *modulefile*
 
 .. mfcmd:: module-version modulefile version-name...
 
@@ -870,19 +841,6 @@ the *modulefile* is being loaded.
  The *string* parameter has to be enclosed in double-quotes if there's more
  than one word specified. Words are defined to be separated by whitespace
  characters (space, tab, cr).
-
-.. mfcmd:: modulepath-label directory label
-
- Assigns *label* string to modulepath *directory*. This *label* is used on
- :subcmd:`avail` output to refer to the modulepath.
-
- The parameter *directory* corresponds to a fully or partially qualified
- modulepath. If *directory* is ``.`` (dot) then the current directory of the
- modulerc file defining this command is assumed.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. mfcmd:: prepend-path [-d C|--delim C|--delim=C] [--duplicates] variable value...
 
@@ -1049,7 +1007,6 @@ the *modulefile* is being loaded.
 
  * ``-d C|--delim C|--delim=C``
  * ``--index``
- * ``--glob``
  * ``--remove-on-unload|--noop-on-unload|--append-on-unload|--prepend-on-unload``
 
  See :mfcmd:`prepend-path` or :mfcmd:`append-path` for further
@@ -1060,21 +1017,13 @@ the *modulefile* is being loaded.
  When ``--index`` option is set, *value* refers to an index in *variable*
  list. The string element pointed by this index is set for removal.
 
- When ``--glob`` option is set, *value* refers to a glob-style pattern which
- is matched against values in *variable* to find those to remove. ``*``
- character in *value* matches any sequence of characters, including a null
- string. ``?`` character in *value* matches any single character. See
- :manpage:`string(n)` Tcl command for the full list of special characters.
-
  When *modulefile* is unloaded, no operation is performed by default or if the
  ``--noop-on-unload`` option is set. If the ``--remove-on-unload`` option is
  set, *value* is removed. If the ``--append-on-unload`` option is set, append
  back *value* removed at load time or specific *value* if any set. If the
  ``--prepend-on-unload`` option is set, prepend back *value* removed at load
  time or specific *value* if any set. These options cannot be set if
- ``--index`` option is also set. The ``--append-on-unload`` and
- ``--prepend-on-unload`` options cannot be set if ``--glob`` option is also
- set.
+ ``--index`` option is also set.
 
  Reference counter of *value* in *variable* denotes the number of times
  *value* has been added to *variable*. This information is stored in
@@ -1096,9 +1045,6 @@ the *modulefile* is being loaded.
     .. versionchanged:: 5.1
        Options ``--remove-on-unload``, ``--noop-on-unload``,
        ``--append-on-unload`` and ``--prepend-on-unload`` added
-
-    .. versionchanged:: 5.4
-       Option ``--glob`` added
 
 .. mfcmd:: reportError string
 
@@ -1383,8 +1329,7 @@ for each interpretation context.
 | and standard Tcl commands | :mfcmd:`module-alias`, :mfcmd:`module-forbid`, |
 |                           | :mfcmd:`module-hide`, :mfcmd:`module-info`,    |
 |                           | :mfcmd:`module-tag`, :mfcmd:`module-version`,  |
-|                           | :mfcmd:`module-virtual`,                       |
-|                           | :mfcmd:`modulepath-label`, :mfcmd:`system`,    |
+|                           | :mfcmd:`module-virtual`, :mfcmd:`system`,      |
 |                           | :mfcmd:`uname`, :mfcmd:`versioncmp` and        |
 |                           | standard Tcl commands                          |
 +---------------------------+------------------------------------------------+
@@ -1509,15 +1454,21 @@ be loaded. Such a file would look like:
 
 .. code-block:: tcl
 
-     #%Module
-     set ModulesVersion R4
+     #%Module1.0
+     ##
+     ##  The desired version of X11
+     ##
+     set ModulesVersion "R4"
 
 The equivalent :file:`.modulerc` would look like:
 
 .. code-block:: tcl
 
-     #%Module
-     module-version ./R4 default
+     #%Module1.0
+     ##
+     ##  The desired version of X11
+     ##
+     module-version "./R4" default
 
 If the extended default mechanism is enabled (see
 :envvar:`MODULES_EXTENDED_DEFAULT` in :ref:`module(1)`) the module version
@@ -1969,8 +1920,7 @@ SEE ALSO
 
 :ref:`module(1)`, :ref:`ml(1)`, :manpage:`Tcl(n)`, :manpage:`TclX(n)`,
 :manpage:`id(1)`, :manpage:`xrdb(1)`, :manpage:`exec(n)`, :manpage:`uname(1)`,
-:manpage:`domainname(1)`, :manpage:`tclvars(n)`, :manpage:`lsort(n)`,
-:manpage:`string(n)`
+:manpage:`domainname(1)`, :manpage:`tclvars(n)`, :manpage:`lsort(n)`
 
 
 NOTES
@@ -1980,3 +1930,4 @@ Tcl was developed by John Ousterhout at the University of California
 at Berkeley.
 
 TclX was developed by Karl Lehenbauer and Mark Diekhans.
+

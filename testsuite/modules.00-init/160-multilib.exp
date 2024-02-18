@@ -52,7 +52,7 @@ file delete lib64
 
 reset_test_env
 
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip multilib support tests\n"
 }
 

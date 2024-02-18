@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Modules'
-copyright = '1996-1999 John L. Furlani & Peter W. Osel, 1998-2017 R.K.Owen, 2002-2004 Mark Lakata, 2004-2017 Kent Mein, 2016-2023 Xavier Delaruelle'
+copyright = '1996-1999 John L. Furlani & Peter W. Osel, 1998-2017 R.K.Owen, 2002-2004 Mark Lakata, 2004-2017 Kent Mein, 2016-2022 Xavier Delaruelle'
 author = ''
 
 # The version info for the project you're documenting, acts as replacement for
@@ -296,7 +296,7 @@ rst_epilog += """.. role:: noparse
 man_pages = [
     ('module', 'module', u'command interface to the Modules package', [], 1),
     ('ml', 'ml', u'handy command interface to the Modules package', [], 1),
-    ('modulefile', 'modulefile', u'files containing Tcl code for the Modules package', [], 5)
+    ('modulefile', 'modulefile', u'files containing Tcl code for the Modules package', [], 4)
 ]
 
 

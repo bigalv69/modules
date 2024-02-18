@@ -120,7 +120,7 @@ unsetenv_var TESTSUITE_ENABLE_SITECONFIG_DEBUG
 
 
 # test broken siteconfig file
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup TESTSUITE_ENABLE_SITECONFIG_BROKEN = '1'\n"
 }
 set env(TESTSUITE_ENABLE_SITECONFIG_BROKEN) 1
@@ -133,7 +133,7 @@ set tserr [escre "$error_msgs: Site configuration source failed
 testouterr_cmd_re sh -V ERR $tserr
 
 # restore environment
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tUnset TESTSUITE_ENABLE_SITECONFIG_BROKEN\n"
 }
 unset env(TESTSUITE_ENABLE_SITECONFIG_BROKEN)
@@ -163,7 +163,7 @@ unsetenv_var TESTSUITE_ENABLE_SITECONFIG_BROKEN3
 
 # test siteconfig file raising error
 # test parseAccessIssue with custom error code by the way
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup TESTSUITE_ENABLE_SITECONFIG_ACCESSERR = '1'\n"
 }
 set env(TESTSUITE_ENABLE_SITECONFIG_ACCESSERR) 1
@@ -176,14 +176,14 @@ set tserr [escre "$error_msgs: Site configuration source failed
 testouterr_cmd_re sh -V ERR $tserr
 
 # restore environment
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tUnset TESTSUITE_ENABLE_SITECONFIG_ACCESSERR\n"
 }
 unset env(TESTSUITE_ENABLE_SITECONFIG_ACCESSERR)
 
 
 # test displayElementList procedure in terse+numbered mode
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup TESTSUITE_ENABLE_SITECONFIG_TERSENUM = '1'\n"
 }
 set env(TESTSUITE_ENABLE_SITECONFIG_TERSENUM) 1
@@ -198,7 +198,7 @@ lappend ans $vers_reportre
 testouterr_cmd_re "sh" "-V" "OK" [join $ans "\n"]
 
 # restore environment
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tUnset TESTSUITE_ENABLE_SITECONFIG_TERSENUM\n"
 }
 unset env(TESTSUITE_ENABLE_SITECONFIG_TERSENUM)
@@ -233,11 +233,31 @@ testouterr_cmd_re "sh" "-V" "OK" $ans
 # restore environment
 unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TRICKYLISTDISP
 
+# test readModuleContent procedure in no error message report if issue
+# could happen when reading .modulerc/.version file if this kind of file gets
+# locked/removed/... between the execution of findModules (that check
+# readability) and getModules (that actually read/execute)
+if { $verbose > 0 } {
+    send_user "\tSetup TESTSUITE_ENABLE_SITECONFIG_READMODNOREPORT = '1'\n"
+}
+set env(TESTSUITE_ENABLE_SITECONFIG_READMODNOREPORT) 1
+
+set ans [list]
+lappend ans $vers_reportre
+testouterr_cmd_re "sh" "-V" "OK" [join $ans "\n"]
+
+# restore environment
+if { $verbose > 0 } {
+    send_user "\tUnset TESTSUITE_ENABLE_SITECONFIG_READMODNOREPORT\n"
+}
+unset env(TESTSUITE_ENABLE_SITECONFIG_READMODNOREPORT)
+
+
 # test loaded module accessor procedures on non-loaded module
 # does not happened currently within modulecmd.tcl as there is always a
 # 'getLoadedModulePropertyList name' retrieval or a isModuleLoaded call prior
 # use of get accessor
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup TESTSUITE_ENABLE_SITECONFIG_LMACCESSOR = '1'\n"
 }
 set env(TESTSUITE_ENABLE_SITECONFIG_LMACCESSOR) 1
@@ -246,11 +266,12 @@ set ans [list]
 lappend ans ""
 lappend ans ""
 lappend ans ""
+lappend ans "bar1 bar2"
 lappend ans $vers_reportre
 testouterr_cmd_re "sh" "-V" "OK" [join $ans "\n"]
 
 # restore environment
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tUnset TESTSUITE_ENABLE_SITECONFIG_LMACCESSOR\n"
 }
 unset env(TESTSUITE_ENABLE_SITECONFIG_LMACCESSOR)
@@ -258,7 +279,7 @@ unset env(TESTSUITE_ENABLE_SITECONFIG_LMACCESSOR)
 
 # test path variable handling on Windows platform (';' separator is used
 # instead of ':')
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup TESTSUITE_ENABLE_SITECONFIG_WINDOWS_PLATFORM = '1'\n"
 }
 set env(TESTSUITE_ENABLE_SITECONFIG_WINDOWS_PLATFORM) 1
@@ -294,7 +315,7 @@ testouterr_cmd "cmd" "load $module" $ans ""
 setenv_path_var PATH $ORIG_PATH
 
 # restore environment
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tUnset TESTSUITE_ENABLE_SITECONFIG_WINDOWS_PLATFORM\n"
 }
 unset env(TESTSUITE_ENABLE_SITECONFIG_WINDOWS_PLATFORM)
@@ -334,7 +355,7 @@ if {$is_stdin_tty} {
 
     # restore environment
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_EXITONGETSSTDIN
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tests relying on a stdin channel attached to a tty\n"
 }
 
@@ -360,7 +381,7 @@ if {[info exists tclextlib_file] && [file executable ./tclsh83]} {
 
     # restore environment
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBLOAD83
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib load tests with tclsh83 as either ext lib or tclsh83 is not available\n"
 }
 
@@ -378,7 +399,7 @@ if {[info exists tclextlib_file]} {
     testouterr_cmd_re sh -V OK [join $ans \n]
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBBADCALL
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as ext lib is not available\n"
 }
 
@@ -393,7 +414,7 @@ if {[info exists closedirlib_file] && [file exists $closedirlib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDCLOSEDIR
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as closedir test lib is not available\n"
 }
 
@@ -408,7 +429,7 @@ if {[info exists getpwuidlib_file] && [file exists $getpwuidlib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDGETPWUID
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as getpwuid test lib is not available\n"
 }
 
@@ -423,7 +444,7 @@ if {[info exists getgroupslib_file] && [file exists $getgroupslib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDGETGROUPS
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as getgroups test lib is not available\n"
 }
 
@@ -438,7 +459,7 @@ if {[info exists 0getgroupslib_file] && [file exists $0getgroupslib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIB0GETGROUPS
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as 0getgroups test lib is not available\n"
 }
 
@@ -453,7 +474,7 @@ if {[info exists dupgetgroupslib_file] && [file exists $dupgetgroupslib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBDUPGETGROUPS
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as dupgetgroups test lib is not available\n"
 }
 
@@ -468,7 +489,7 @@ if {[info exists getgrgidlib_file] && [file exists $getgrgidlib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDGETGRGID
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as getgrgid test lib is not available\n"
 }
 
@@ -483,7 +504,7 @@ if {[info exists sysconflib_file] && [file exists $sysconflib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDSYSCONF
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as sysconf test lib is not available\n"
 }
 
@@ -498,7 +519,7 @@ if {[info exists timelib_file] && [file exists $timelib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDTIME
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as time test lib is not available\n"
 }
 
@@ -521,7 +542,7 @@ if {[info exists mktimelib_file] && [file exists $mktimelib_file]} {
 
     unsetenv_var TESTSUITE_ENABLE_SITECONFIG_TCLEXTLIBFAILEDMKTIME
     unsetenv_var LD_PRELOAD
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tcl ext lib erroneous procedure calls as mktime test lib is not available\n"
 }
 
@@ -608,7 +629,7 @@ set tserr "$error_msgs: Collection unk cannot be read.\n  couldn't open \"/path/
 testouterr_cmd_re sh -V ERR $tserr
 unsetenv_var TESTSUITE_ENABLE_SITECONFIG_READCOLLCONTENT
 
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tests relying on an excepted siteconfig file installed\n"
 }
 

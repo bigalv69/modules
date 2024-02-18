@@ -20,7 +20,7 @@
 #
 ##############################################################################
 
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tInitializing the testsuite ...\n"
 }
 
@@ -34,7 +34,6 @@ set warn_msgs "WARNING"
 set prob_msgs "$messages:PROB:\[0-9\]+"
 set verb_msgs "$messages:VERB:\[0-9\]+"
 set moderr_msgs "Module $error_msgs"
-set modwarn_msgs "Module $warn_msgs"
 set cacheerr_msgs "Cache $error_msgs"
 set info_msgs "INFO"
 set timer_msgs TIMER
@@ -76,7 +75,6 @@ set savelist_long_headerre "- Collection $modlin.- Last mod. $modlin"
 # Common error responses
 set err_path "$error_msgs: Unable to locate a modulefile for "
 set err_file "$error_msgs: No such file or directory on "
-set warn_file "$warn_msgs: No such file or directory on "
 set err_illdir "$error_msgs: Illegal operation on a directory on "
 set err_notadir "$error_msgs: Not a directory on "
 set err_nomodpath "$error_msgs: $msg_nomodpath"
@@ -94,15 +92,12 @@ set err_emptyfilename "$error_msgs: $msg_filenameempty"
 set err_unsatreload "$error_msgs: Cannot reload modules, some of their constraints are not satistied"
 set err_nodefault "$error_msgs: No default version defined for "
 set err_evalabort "$error_msgs: Module evaluation aborted"
-set warn_evalabort "$warn_msgs: Module evaluation aborted"
 set err_specmodname "$error_msgs: $msg_nomodnameinarg "
 set err_specvers "$error_msgs: $msg_invversspec "
 set err_rangevers "$error_msgs: Invalid version range "
 set err_stickyunload "$::error_msgs: Unload of sticky module skipped"
-set warn_stickyunload "$::warn_msgs: Unload of sticky module skipped"
 set err_stickyunloadf "$::warn_msgs: Unload of sticky module forced"
 set err_superstickyunload "$::error_msgs: Unload of super-sticky module skipped"
-set warn_superstickyunload "$::warn_msgs: Unload of super-sticky module skipped"
 set err_reqfull "$::error_msgs: Module version must be specified to load module"
 set err_nomodloaded "$error_msgs: $msg_nomodloaded"
 set err_save_emptyenv "$::error_msgs: Nothing to save in a collection"
@@ -235,10 +230,6 @@ proc moderr_minverreqns {modfile minver} {
     return "$::moderr_msgs: Modulefile requires at least Modules version $minver\nIn '$modfile'\n$::err_contactns"
 }
 
-proc modwarn_minverreqns {modfile minver} {
-    return "$::modwarn_msgs: Modulefile requires at least Modules version $minver\nIn '$modfile'\n$::err_contactns"
-}
-
 proc collerr_minverreqns {collfile minver} {
     return "$::error_msgs: Collection $collfile requires at least Modules version $minver"
 }
@@ -266,10 +257,10 @@ proc err_permdenied {modfile} {
     return "$::error_msgs: Permission denied on '$modfile'"
 }
 
-proc err_accessdenied {mod {extramsg {}} {pad {  }}} {
+proc err_accessdenied {mod {extramsg {}}} {
     set msg "$::error_msgs: Access to module $mod is denied"
     if {$extramsg ne {}} {
-        append msg "\n$pad$extramsg"
+        append msg "\n  $extramsg"
     }
     return $msg
 }
@@ -356,8 +347,8 @@ proc err_extraspecifier {xtspec} {
         specifiers are: always-load append-path chdir complete conflict\
         depends-on envvar family incompat load load-any prepend-path prereq\
         prereq-all prereq-any pushenv remove-path require set-alias\
-        set-function setenv switch switch-on switch-off tag try-load\
-        uncomplete unload unset-alias unset-function unsetenv variant"
+        set-function setenv switch switch-on switch-off try-load uncomplete\
+        unload unset-alias unset-function unsetenv variant"
 }
 
 proc err_xtspec_notallowed {} {
@@ -447,15 +438,11 @@ proc msg_no_stash_coll {{target {}}} {
     return $msg
 }
 
-proc msg_modwarn {msg cmdline modfile linenum {pad {}} {procname {}} {contact {}} {custom {}} {custom2 {while executing}}} {
-    return [msg_moderr $msg $cmdline $modfile $linenum $pad $procname $contact $custom $custom2 {Module WARNING}]
-}
-
-proc msg_moderr {msg cmdline modfile linenum {pad {}} {procname {}} {contact {}} {custom {}} {custom2 {while executing}} {title {Module ERROR}}} {
+proc msg_moderr {msg cmdline modfile linenum {pad {}} {procname {}} {contact {}} {custom {}} {custom2 {while executing}}} {
 
     set linefile [expr {$procname ne {} || $linenum eq {} ? {} : " line $linenum"}]
     set errcontact [expr {$contact eq {} ? $::err_contactns : "Please contact <$contact>"}]
-    set res "$title: $msg
+    set res "$::moderr_msgs: $msg
 $pad    $custom2
 $pad\"$cmdline\""
     if {$procname ne {}} {
@@ -608,16 +595,16 @@ proc msg_create {mod args} {
 proc msg_top_load {mod unlist reqlolist deprelist args} {
     lassign [mix_depre_depun_list $deprelist {}] deprelist depunlist
 
-    if {[llength $depunlist]} {
+    if {[llength $depunlist] > 0} {
         lappend args "Unloading dependent: [join $depunlist]"
     }
-    if {[llength $unlist]} {
+    if {[llength $unlist] > 0} {
         lappend args "Unloading conflict: [join $unlist]"
     }
-    if {[llength $reqlolist]} {
+    if {[llength $reqlolist] > 0} {
         lappend args "Loading requirement: [join $reqlolist]"
     }
-    if {[llength $deprelist]} {
+    if {[llength $deprelist] > 0} {
         lappend args "Reloading dependent: [join $deprelist]"
     }
     return [eval msg_load "{$mod}" $args]
@@ -625,13 +612,13 @@ proc msg_top_load {mod unlist reqlolist deprelist args} {
 
 proc msg_top_unload {mod depunlist urequnlist deprelist args} {
     lassign [mix_depre_depun_list $deprelist $depunlist] deprelist depunlist
-    if {[llength $depunlist]} {
+    if {[llength $depunlist] > 0} {
         lappend args "Unloading dependent: [join $depunlist]"
     }
-    if {[llength $urequnlist]} {
+    if {[llength $urequnlist] > 0} {
         lappend args "Unloading useless requirement: [join $urequnlist]"
     }
-    if {[llength $deprelist]} {
+    if {[llength $deprelist] > 0} {
         lappend args "Reloading dependent: [join $deprelist]"
     }
     return [eval msg_unload "{$mod}" $args]
@@ -640,19 +627,19 @@ proc msg_top_unload {mod depunlist urequnlist deprelist args} {
 proc msg_top_switch {old new depunlist urequnlist unlist reqlolist deprelist args} {
     lassign [mix_depre_depun_list $deprelist $depunlist] deprelist depunlist
 
-    if {[llength $depunlist]} {
+    if {[llength $depunlist] > 0} {
         lappend args "Unloading dependent: [join $depunlist]"
     }
-    if {[llength $urequnlist]} {
+    if {[llength $urequnlist] > 0} {
         lappend args "Unloading useless requirement: [join $urequnlist]"
     }
-    if {[llength $unlist]} {
+    if {[llength $unlist] > 0} {
         lappend args "Unloading conflict: [join $unlist]"
     }
-    if {[llength $reqlolist]} {
+    if {[llength $reqlolist] > 0} {
         lappend args "Loading requirement: [join $reqlolist]"
     }
-    if {[llength $deprelist]} {
+    if {[llength $deprelist] > 0} {
         lappend args "Reloading dependent: [join $deprelist]"
     }
     return [eval msg_switch "{$old}" "{$new}" $args]
@@ -848,7 +835,6 @@ unset new_perms
 
 # check if module command is defined prior running tests
 set is_modules_defined [expr {![catch {exec $env(TESTSUITEDIR)/is_module_defined}]}]
-set is_modules_defined_fish [expr {![catch {exec $env(TESTSUITEDIR)/is_module_defined.fish}]}]
 
 # check if symbolic link registered in git repository have been effectively
 # created as symbolic link to determine if they are supported on filesystem

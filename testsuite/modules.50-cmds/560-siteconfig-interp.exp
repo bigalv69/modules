@@ -21,8 +21,6 @@
 #
 ##############################################################################
 
-skip_if_quick_mode
-
 set mp $modpath.3
 set mpre $modpathre.3
 setenv_path_var MODULEPATH $mp
@@ -370,7 +368,7 @@ unsetenv_var FOO
 unsetenv_var BAR
 unsetenv_var TESTSUITE_ENABLE_SITECONFIG_EXTRA_REGULAR
 
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tests relying on an excepted siteconfig file installed\n"
 }
 

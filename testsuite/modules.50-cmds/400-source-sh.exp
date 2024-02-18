@@ -728,12 +728,12 @@ setenv_var TESTSUITE_SHTOMOD_NOCD 1
 set ans [list]
 lappend ans [list set _LMFILES_ $mp/source-sh/1]
 lappend ans [list set LOADEDMODULES source-sh/1]
-lappend ans [list set __MODULES_LMSOURCESH source-sh/1\&bash\ testsuite/example/sh-to-mod.sh]
+lappend ans [list set __MODULES_LMSOURCESH source-sh/1\&bash\ testsuite/example/sh-to-mod.sh\|]
 testouterr_cmd sh {load source-sh/1} $ans {}
 set ans [list]
 lappend ans [list set LOADEDMODULES source-sh/1:source-sh/2]
 lappend ans [list set _LMFILES_ $mp/source-sh/1:$mp/source-sh/2]
-lappend ans [list set __MODULES_LMSOURCESH source-sh/1\&bash\ testsuite/example/sh-to-mod.sh:source-sh/2\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\ \{\}\|setenv\ FOOMINI\ value]
+lappend ans [list set __MODULES_LMSOURCESH source-sh/1\&bash\ testsuite/example/sh-to-mod.sh\|:source-sh/2\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\ \{\}\|setenv\ FOOMINI\ value]
 lappend ans [list setpath FOOPATH /path/to/mini:]
 lappend ans [list set __MODULES_LMREFRESH source-sh/2]
 lappend ans [list set FOOMINI value]
@@ -742,7 +742,7 @@ testouterr_cmd_re sh {load source-sh/1 source-sh/2} $ans {}
 
 setenv_loaded_module [list source-sh/1 source-sh/2] [list $mp/source-sh/1 $mp/source-sh/2]
 setenv_var __MODULES_LMREFRESH source-sh/2
-setenv_var __MODULES_LMSOURCESH source-sh/1\&bash\ testsuite/example/sh-to-mod.sh:source-sh/2\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\ \{\}\|setenv\ FOOMINI\ value
+setenv_var __MODULES_LMSOURCESH source-sh/1\&bash\ testsuite/example/sh-to-mod.sh\|:source-sh/2\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\ \{\}\|setenv\ FOOMINI\ value
 set ans [list]
 lappend ans [list set _LMFILES_ $mp/source-sh/2]
 lappend ans [list set LOADEDMODULES source-sh/2]
@@ -946,13 +946,14 @@ setenv_path_var FOOPATH /path/to/mini {}
 setenv_var __MODULES_LMSOURCESH source-sh/5.0\&bash\ testsuite/example/sh-to-mod.sh\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\ \{\}\|setenv\ FOOMINI\ value\&bash\ testsuite/example/sh-to-mod.sh\ arg1\|setenv\ FOOARG1\ arg1
 
 set ans [list]
+# re-serialized entry of __MODULES_LMSOURCESH is not equal to the one recorded in environment, so variable is not unset
 lappend ans [list unset FOOMINI]
 lappend ans [list unset __MODULES_SHARE_FOOPATH]
 lappend ans [list unset FOOPATH]
 lappend ans [list unset _LMFILES_]
 lappend ans [list unset LOADEDMODULES]
 lappend ans [list unset __MODULES_LMREFRESH]
-lappend ans [list unset __MODULES_LMSOURCESH]
+lappend ans [list set __MODULES_LMSOURCESH source-sh/5.0\&bash\ testsuite/example/sh-to-mod.sh\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\ \{\}\|setenv\ FOOMINI\ value\&bash\ testsuite/example/sh-to-mod.sh\ arg1\|setenv\ FOOARG1\ arg1]
 lappend ans [list unset FOOARG1]
 lappend ans [list unalias almini]
 testouterr_cmd sh {unload source-sh/5.0} $ans {}
@@ -980,7 +981,7 @@ lappend ans [list unset FOOPATH]
 lappend ans [list unset _LMFILES_]
 lappend ans [list unset LOADEDMODULES]
 lappend ans [list unset __MODULES_LMREFRESH]
-lappend ans [list unset __MODULES_LMSOURCESH]
+lappend ans [list set __MODULES_LMSOURCESH source-sh/5.0\&bash\ testsuite/example/sh-to-mod.sh\&sh\ testsuite/example/mini-sh-to-mod.sh\|prepend-path\ FOOPATH\ /path/to/mini\ \{\}\|set-alias\ almini\|setenv\ FOOMINI\ value\&bash\ testsuite/example/sh-to-mod.sh\ arg1\|setenv\ FOOARG1\ arg1]
 lappend ans [list unset FOOARG1]
 lappend ans [list unalias almini]
 testouterr_cmd sh {unload source-sh/5.0} $ans {}
@@ -992,7 +993,7 @@ set tserr "$moderr_msgs: wrong # args: should be \"set-alias alias what\"
 \"set-alias {}\"
     invoked from within
 \"interp eval \$itrp \$modcmd\"
-    (procedure \"source-sh-un\" line 11)
+    (procedure \"source-sh-un\" line 17)
     invoked from within
 \"source-sh sh testsuite/example/mini-sh-to-mod.sh\"
     (file \"$mp/source-sh/5.0\" line 3)
@@ -1006,7 +1007,7 @@ set tserr "$moderr_msgs: wrong # args: should be \"setenv ?--set-if-undef? var v
 \"setenv FOOARG1\"
     invoked from within
 \"interp eval \$itrp \$modcmd\"
-    (procedure \"source-sh-un\" line 11)
+    (procedure \"source-sh-un\" line 17)
     invoked from within
 \"source-sh bash testsuite/example/sh-to-mod.sh arg1\"
     (file \"$mp/source-sh/5.0\" line 4)
@@ -1020,7 +1021,7 @@ set tserr "$moderr_msgs: invalid command name \"set-foo\"
 \"set-foo almini\"
     invoked from within
 \"interp eval \$itrp \$modcmd\"
-    (procedure \"source-sh-un\" line 11)
+    (procedure \"source-sh-un\" line 17)
     invoked from within
 \"source-sh sh testsuite/example/mini-sh-to-mod.sh\"
     (file \"$mp/source-sh/5.0\" line 3)
@@ -1588,9 +1589,7 @@ lappend ans [list out {complete -c othercmd --short-option 'V' --description 'Co
 lappend ans [list out {complete -e -c mycmd;}]
 lappend ans [list out {complete -c mycmd --exclusive --short-option 'h' --description 'Command help';}]
 }
-if {!$is_modules_defined_fish} {
-    testouterr_cmd fish {refresh} $ans {}
-}
+testouterr_cmd fish {refresh} $ans {}
 
 if {[info exists fish_version_ge31] && $fish_version_ge31} {
 set tserr_disp72 "-------------------------------------------------------------------
@@ -1647,15 +1646,13 @@ setenv\t\tFOOWC va*ue
 module-whatis\tsource-sh/7.2
 -------------------------------------------------------------------"
 }
-if {!$is_modules_defined_fish} {
-    # following tests are expected to fail with Tcl 9.0 (as of 9.0b1)
-    # similar stack trace than one reported at:
-    # https://core.tcl-lang.org/tcl/tktview/46dda6fc2904ee86cc45b3ddc14ce6fb6b4303e4
-    if {[cmpversion $tclsh_version 9.0] >= 0} {
-        testouterr_cmd fish {display source-sh/7.2} OK $tserr_disp72 xfail
-    } else {
-        testouterr_cmd fish {display source-sh/7.2} OK $tserr_disp72
-    }
+# following tests are expected to fail with Tcl 9.0 (as of 9.0b1)
+# similar stack trace than one reported at:
+# https://core.tcl-lang.org/tcl/tktview/46dda6fc2904ee86cc45b3ddc14ce6fb6b4303e4
+if {[cmpversion $tclsh_version 9.0] >= 0} {
+    testouterr_cmd fish {display source-sh/7.2} OK $tserr_disp72 xfail
+} else {
+    testouterr_cmd fish {display source-sh/7.2} OK $tserr_disp72
 }
 
 unsetenv_loaded_module
@@ -1970,7 +1967,7 @@ unsetenv_var TESTSUITE_ENABLE_SITECONFIG_SOURCESHFISHUNSET
 
 unsetenv_var TESTSUITE_SHTOMOD_UNSETALFUNCCOMP
 
-} elseif {$verbose} {
+} elseif {$verbose > 0} {
     send_user "\tSkip tests relying on an excepted siteconfig file installed\n"
 }
 

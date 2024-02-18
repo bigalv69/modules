@@ -99,12 +99,6 @@ extendeddefault := @extendeddefault@
 # advanced version specification
 advversspec := @advversspec@
 
-# raise error if root name is already loaded
-uniquenameloaded := @uniquenameloaded@
-
-# cache file content evaluated with source command
-sourcecache := @sourcecache@
-
 # module name search matching style
 searchmatch := @searchmatch@
 
@@ -126,10 +120,6 @@ nearlyforbiddendays := @nearlyforbiddendays@
 # tag abbreviations and coloring properties
 tagabbrev := @tagabbrev@
 tagcolorname := @tagcolorname@
-
-# error behaviors
-stickypurge := @stickypurge@
-abortonerror := @abortonerror@
 
 # check version on magic cookie
 mcookieversioncheck := @mcookieversioncheck@

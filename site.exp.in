@@ -70,10 +70,6 @@ set install_extendeddefault "@extendeddefault@"
 
 set install_advversspec "@advversspec@"
 
-set install_uniquenameloaded "@uniquenameloaded@"
-
-set install_sourcecache "@sourcecache@"
-
 set install_searchmatch "@searchmatch@"
 
 set install_wa277 "@wa277@"
@@ -88,10 +84,6 @@ set install_nearlyforbiddendays "@nearlyforbiddendays@"
 
 set install_tagabbrev "@tagabbrev@"
 set install_tagcolorname "@tagcolorname@"
-
-set install_stickypurge "@stickypurge@"
-
-set install_abortonerror "@abortonerror@"
 
 set install_mcookieversioncheck "@mcookieversioncheck@"
 

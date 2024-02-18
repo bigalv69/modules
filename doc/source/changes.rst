@@ -5,7 +5,7 @@ Changes between versions
 
 This document lists functionality differences between each major version of Modules. The goal of each following section is to reference the features of previous major version that are missing or behave differently on the next major version and the features that can only be found on this newer version. For instance the `Modules 4`_ section lists the changes compared to Modules 3.2.
 
-Regarding deprecated or newly introduced features, this document only lists their name or the command line argument related to them. Please refer to the :ref:`module(1)` and the :ref:`modulefile(5)` man pages of the previous or newer Modules version to learn the details about these removed or added features.
+Regarding deprecated or newly introduced features, this document only lists their name or the command line argument related to them. Please refer to the :ref:`module(1)` and the :ref:`modulefile(4)` man pages of the previous or newer Modules version to learn the details about these removed or added features.
 
 
 .. _Modules 4 changes:
@@ -828,12 +828,6 @@ The following command line switches appeared on Modules 5.
  ``+`` or ``-`` which means value should respectively be appended to or
  subtracted from current configuration option value.
 
-:option:`--force`
-
- Starting Modules 5.4, this command line switch by-passes *abort on error*
- behavior. Modulefile is unloaded anyway when an evaluation error occurs if
- :option:`--force` option is used.
-
 Module Sub-Commands
 """""""""""""""""""
 
@@ -913,20 +907,6 @@ The following module sub-commands appeared on Modules 5.
  * :ref:`Extra specifier` is accepted in search query to query content of
    modulefiles.
 
- Starting Modules 5.4:
-
- * ``tag`` :ref:`extra specifier` is introduced.
- * set multiple values on extra specifier, each of them separated by comma
-   character, to get modules matching any of these values (*OR* operator).
- * set multiple values on variant specification, each of them separated by
-   comma character, to get modules providing any of these variant values (*OR*
-   operator).
-
-:subcmd:`reload`
-
- Starting Modules 5.4, support for :option:`--force` option is added on this
- sub-command.
-
 Environment
 """""""""""
 
@@ -958,12 +938,6 @@ The following environment variables appeared on Modules 5.
 |            | :envvar:`MODULES_CACHE_EXPIRY_SECS`                             |
 |            | :envvar:`MODULES_IGNORE_USER_RC`                                |
 +------------+-----------------------------------------------------------------+
-| 5.4        | :envvar:`MODULES_STICKY_PURGE`,                                 |
-|            | :envvar:`MODULES_UNIQUE_NAME_LOADED`,                           |
-|            | :envvar:`MODULES_ABORT_ON_ERROR`,                               |
-|            | :envvar:`__MODULES_LMSTICKYRULE`,                               |
-|            | :envvar:`MODULES_SOURCE_CACHE`                                  |
-+------------+-----------------------------------------------------------------+
 
 Modules Specific Tcl Commands
 """""""""""""""""""""""""""""
@@ -980,8 +954,6 @@ The following modulefile Tcl commands appeared on Modules 5.
 |            | :mfcmd:`prereq-all`, :mfcmd:`always-load`,                      |
 |            | :mfcmd:`module load-any<module>`, :mfcmd:`family`,              |
 |            | :mfcmd:`complete`, :mfcmd:`uncomplete`, :mfcmd:`pushenv`        |
-+------------+-----------------------------------------------------------------+
-| 5.4        | :mfcmd:`modulepath-label`                                       |
 +------------+-----------------------------------------------------------------+
 
 :mfcmd:`system`, :mfcmd:`is-used`
@@ -1033,9 +1005,6 @@ The following modulefile Tcl commands appeared on Modules 5.
  * the ``--noop-on-unload`` option is added to perform no operation when
    modulefile is unloaded.
 
- Starting with version ``5.4``, the ``--glob`` option is added to remove value
- matching a glob-style pattern.
-
 :mfcmd:`setenv`
 
  Starting with version ``5.1``, the ``--set-if-undef`` option is added to set
@@ -1059,22 +1028,6 @@ The following modulefile Tcl commands appeared on Modules 5.
 
  Starting version 5.1, the ``--return-value`` option is added to return
  variant value or its fallback when modulefile is evaluated in *display* mode.
-
-:mfcmd:`module-tag`, :mfcmd:`module-hide`, :mfcmd:`module-forbid`
-
- Starting with version 5.4:
-
- * module can be specified with its full path file name to precisely target
-   one modulefile.
- * module specification on which stickiness applies is recorded in loaded
-   environment to determine if it is still satisfied when updating
-   environment.
-
-:mfcmd:`break`
-
- Starting with version 5.4, a modulefile using :mfcmd:`break` may be unloaded
- anyway if forced. To forbid unload of a modulefile, it is now advised to tag
- it ``super-sticky`` with :mfcmd:`module-tag` command.
 
 Modules Variables
 """""""""""""""""
@@ -1109,9 +1062,6 @@ The following Modules configuration option has been introduced on Modules 5.
 | 5.3        | :mconfig:`ignore_cache`, :mconfig:`cache_buffer_bytes`,         |
 |            | :mconfig:`cache_expiry_secs`, :mconfig:`ignore_user_rc`         |
 +------------+-----------------------------------------------------------------+
-| 5.4        | :mconfig:`sticky_purge`, :mconfig:`unique_name_loaded`,         |
-|            | :mconfig:`abort_on_error`, :mconfig:`source_cache`              |
-+------------+-----------------------------------------------------------------+
 
 :mconfig:`avail_output`, :mconfig:`avail_terse_output`
 
@@ -1129,24 +1079,10 @@ The following Modules configuration option has been introduced on Modules 5.
  Starting version 5.3.1, element ``indesym`` is added to the list of accepted
  values.
 
-:mconfig:`list_output`, :mconfig:`list_terse_output`
+:mconfig:`list_output`, :mconfig:`list_terse_output`, :mconfig:`colors`,
+:mconfig:`protected_envvars`, :mconfig:`shells_with_ksh_fpath`,
+:mconfig:`tag_abbrev`, :mconfig:`tag_color_name`, :mconfig:`variant_shortcut`
 
  Starting Modules 5.3, these configuration options accept value prefixed by
  ``+`` or ``-`` which means value should respectively be appended to or
  subtracted from current configuration option value.
-
- Starting version 5.4, elements ``alias`` and ``indesym`` are added to the
- list of accepted values.
-
-:mconfig:`colors`, :mconfig:`protected_envvars`,
-:mconfig:`shells_with_ksh_fpath`, :mconfig:`tag_abbrev`,
-:mconfig:`tag_color_name`, :mconfig:`variant_shortcut`
-
- Starting Modules 5.3, these configuration options accept value prefixed by
- ``+`` or ``-`` which means value should respectively be appended to or
- subtracted from current configuration option value.
-
-:mconfig:`rcfile`
-
- Starting Modules 5.4, this configuration option accepts more than one global
- rc file location. A colon character separates each of these locations.

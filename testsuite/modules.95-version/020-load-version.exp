@@ -20,7 +20,7 @@
 #
 ##############################################################################
 
-if {$verbose} {
+if { $verbose > 0 } {
 	send_user "\tLoad of first version onto stack...\n"
 }
 

@@ -1,11 +1,6 @@
-" Vim filetype plugin file
-" Language:     Tcl Modulefile
-" Maintainer:   Xavier Delaruelle <xavier.delaruelle@cea.fr>
-" Original:     Felix Neumärker <xdch47@posteo.de>
-" Reference:    https://modules.readthedocs.io/en/latest/modulefile.html
 
 if exists("b:did_modulefile_ftplugin")
-    finish
+  finish
 endif
 let b:did_modulefile_ftplugin = 1
 
@@ -26,5 +21,3 @@ let b:undo_ftplugin = "setlocal fo< com< cms< inc< inex< def< isf< kp<" .
 " Restore the saved compatibility options.
 let &cpo = s:cpo_save
 unlet s:cpo_save
-
-" vim:set tabstop=4 shiftwidth=4 expandtab textwidth=100:

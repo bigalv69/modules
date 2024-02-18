@@ -20,16 +20,12 @@
 
 ##########################################################################
 
-proc charEscaped {str {charlist " \\\\\t{}|<>!;#^\$&*?\"'`()"}} {
+proc charEscaped {str {charlist { \\\t\{\}|<>!;#^$&*?"'`()}}} {
    return [regsub -all "\(\[$charlist\]\)" $str {\\\1}]
 }
 
-proc charUnescaped {str {charlist " \\\\\t{}|<>!;#^\$&*?\"'`()"}} {
+proc charUnescaped {str {charlist { \\\t\{\}|<>!;#^$&*?"'`()}}} {
    return [regsub -all "\\\\\(\[$charlist\]\)" $str {\1}]
-}
-
-proc escapeGlobChars {str} {
-   return [charEscaped $str {*?[]\\}]
 }
 
 proc strTo {lang str {esc 1}} {
@@ -216,7 +212,7 @@ proc appendNoDupToList {lstname args} {
 proc replaceFromList {list1 item {item2 {}}} {
    while {[set xi [lsearch -exact $list1 $item]] >= 0} {
       ##nagelfar ignore #2 Badly formed if statement
-      set list1 [if {![string length $item2]} {lreplace $list1 $xi $xi}\
+      set list1 [if {[string length $item2] == 0} {lreplace $list1 $xi $xi}\
          {lreplace $list1 $xi $xi $item2}]
    }
 
@@ -278,7 +274,7 @@ proc getIntersectBetweenList {args} {
       }
       set res $cur_res
       # stop when intersection result becomes empty
-      if {![llength $res]} {
+      if {[llength $res] == 0} {
          break
       }
    }
@@ -318,7 +314,7 @@ proc getDiffBetweenArray {arrname1 arrname2 {notset_equals_empty 0}\
       } else {
          # with a different value, not considering order
          lassign [getDiffBetweenList $arr1($name) $arr2($name)] notin2 notin1
-         if {[llength $notin2] || [llength $notin1]} {
+         if {([llength $notin2] + [llength $notin1]) > 0} {
             lappend diff $name
          }
       }

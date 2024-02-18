@@ -21,7 +21,7 @@
 #
 ##############################################################################
 
-if {$verbose} {
+if { $verbose > 0 } {
 	send_user "\tLoading and unloading a module selected by \$MODULE_VERSION...\n"
 }
 

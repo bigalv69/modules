@@ -31,7 +31,7 @@ set bad_arg2 "' command"
 # The tests
 #
 
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tChecking commands against wrong argument number...\n"
 }
 

@@ -49,24 +49,30 @@ proc setenv-sc {args} {
 
    recordScanModuleElt $var setenv envvar
 
-   setEnvVarIfUndefined $var {}
+   if {![info exists ::env($var)]} {
+      set ::env($var) {}
+   }
    return {}
 }
 
 proc edit-path-sc {cmd args} {
    lassign [parsePathCommandArgs $cmd load noop {*}$args] separator allow_dup\
-      idx_val ign_refcount glob_match bhv var path_list
+      idx_val ign_refcount bhv var path_list
 
    recordScanModuleElt $var $cmd envvar
 
-   setEnvVarIfUndefined $var {}
+   if {![info exists ::env($var)]} {
+      set ::env($var) {}
+   }
    return {}
 }
 
 proc pushenv-sc {var val} {
    recordScanModuleElt $var pushenv envvar
 
-   setEnvVarIfUndefined $var {}
+   if {![info exists ::env($var)]} {
+      set ::env($var) {}
+   }
    return {}
 }
 
@@ -75,12 +81,14 @@ proc unsetenv-sc {args} {
 
    recordScanModuleElt $var unsetenv envvar
 
-   setEnvVarIfUndefined $var {}
+   if {![info exists ::env($var)]} {
+      set ::env($var) {}
+   }
    return {}
 }
 
 proc complete-sc {shell name body} {
-   if {![string length $name]} {
+   if {[string length $name] == 0} {
       knerror "Invalid command name '$name'"
    }
 
@@ -88,7 +96,7 @@ proc complete-sc {shell name body} {
 }
 
 proc uncomplete-sc {name} {
-   if {![string length $name]} {
+   if {[string length $name] == 0} {
       knerror "Invalid command name '$name'"
    }
 
@@ -116,7 +124,7 @@ proc chdir-sc {dir} {
 }
 
 proc family-sc {name} {
-   if {![string length $name] || ![regexp {^[A-Za-z0-9_]*$} $name]} {
+   if {[string length $name] == 0 || ![regexp {^[A-Za-z0-9_]*$} $name]} {
       knerror "Invalid family name '$name'"
    }
    recordScanModuleElt $name family
@@ -227,22 +235,12 @@ proc doesModVariantMatch {mod pvrlist} {
       # no match if a specified variant is not found among module variants or
       # if the value is not available
       foreach pvr $pvrlist {
-         set pvrvallist [lassign $pvr vrname pvrisbool]
-         # check at least one variant value from specification matches defined
-         # available variant values
-         set one_vrval_match 0
-         foreach pvrval $pvrvallist {
-            # if variant is a boolean, specified value should be a boolean too
-            # any value accepted for free-value variant
-            if {[info exists availvrarr($vrname)] && (($pvrisbool &&\
-               $availvrisbool($vrname)) || (!$availvrisbool($vrname) &&\
-               (![llength $availvrarr($vrname)] || $pvrval in\
-               $availvrarr($vrname))))} {
-               set one_vrval_match 1
-               break
-            }
-         }
-         if {!$one_vrval_match} {
+         lassign $pvr vrname pvrval pvrisbool
+         # if variant is a boolean, specified value should be a boolean too
+         # any value accepted for free-value variant
+         if {![info exists availvrarr($vrname)] || ($availvrisbool($vrname)\
+            && !$pvrisbool) || (!$availvrisbool($vrname) && [llength\
+            $availvrarr($vrname)] > 0 && $pvrval ni $availvrarr($vrname))} {
             set ret 0
             break
          }
@@ -253,63 +251,39 @@ proc doesModVariantMatch {mod pvrlist} {
    return $ret
 }
 
-# test given tag specification matches tags defined over module
-proc doesModTagMatch {mod modfile ptaglist} {
-   set ret 1
-   foreach ptag $ptaglist {
-      set namelist [lassign $ptag elt]
-      # check if at least one tag name from specifier value is applied on mod
-      set one_name_match 0
-      foreach name $namelist {
-         if {[isModuleTagged $mod $name 1 $modfile]} {
-            set one_name_match 1
-            break
-         }
-      }
-      # no tag name from specifier match mod mean no match on extra query
-      if {!$one_name_match} {
-         set ret 0
-         break
-      }
-   }
-   return $ret
-}
-
 # collect list of modules matching all extra specifier criteria
 proc getModMatchingExtraSpec {modpath pxtlist} {
    set res [list]
    if {[info exists ::g_scanModuleElt] && [dict exists $::g_scanModuleElt\
       $modpath]} {
       foreach pxt $pxtlist {
-         set namelist [lassign $pxt elt]
+         lassign $pxt elt name
          set one_crit_res [list]
-         foreach name $namelist {
-            if {$elt in {require incompat load unload prereq conflict\
-               prereq-all prereq-any depends-on always-load load-any try-load\
-               switch switch-on switch-off}} {
-               if {[dict exists $::g_scanModuleElt $modpath $elt]} {
-                  foreach {modspec values} [dict get $::g_scanModuleElt\
-                     $modpath $elt] {
-                     # modEq proc has been initialized in getModules phase #2
-                     if {[modEq $modspec $name eqstart 1 5 1]} {
-                        # possible duplicate module entry in result list
-                        lappend one_crit_res {*}[dict get $::g_scanModuleElt\
-                           $modpath $elt $modspec]
-                     }
+         if {$elt in {require incompat load unload prereq conflict prereq-all\
+            prereq-any depends-on always-load load-any try-load switch\
+            switch-on switch-off}} {
+            if {[dict exists $::g_scanModuleElt $modpath $elt]} {
+               foreach {modspec values} [dict get $::g_scanModuleElt $modpath\
+                  $elt] {
+                  # modEq proc has been initialized in getModules phase #2
+                  if {[modEq $modspec $name eqstart 1 5 1]} {
+                     # possible duplicate module entry in result list
+                     lappend one_crit_res {*}[dict get $::g_scanModuleElt\
+                        $modpath $elt $modspec]
                   }
                }
-            } else {
-               # get mods matching one value of one extra specifier criterion
-               if {[dict exists $::g_scanModuleElt $modpath $elt $name]} {
-                  lappend one_crit_res {*}[dict get $::g_scanModuleElt\
-                     $modpath $elt $name]
-               }
+            }
+         } else {
+            # get modules matching one simple extra specifier criterion
+            if {[dict exists $::g_scanModuleElt $modpath $elt $name]} {
+               set one_crit_res [dict get $::g_scanModuleElt $modpath\
+                  $elt $name]
             }
          }
          lappend all_crit_res $one_crit_res
          # no match on one criterion means no match globally, no need to test
          # further criteria
-         if {![llength $one_crit_res]} {
+         if {[llength $one_crit_res] == 0} {
             break
          }
       }
@@ -326,8 +300,8 @@ proc isExtraMatchSearchRequired {mod} {
    # * mod specification contains variant during avail/paths/whatis
    # * mod specification contains extra specifier during avail/paths/whatis
    return [expr {![getState inhibit_ems 0] && ([isEltInReport variant 0] ||\
-      (([llength [getVariantListFromVersSpec $mod]] || [llength\
-      [getExtraListFromVersSpec $mod]]) && [currentState commandname] in\
+      (([llength [getVariantListFromVersSpec $mod]] + [llength\
+      [getExtraListFromVersSpec $mod]]) > 0 && [currentState commandname] in\
       {avail paths whatis}))}]
 }
 
@@ -339,51 +313,33 @@ proc filterExtraMatchSearch {modpath mod res_arrname versmod_arrname} {
 
    # get extra match query properties
    set spec_vr_list [getVariantListFromVersSpec $mod]
-   set check_variant [llength $spec_vr_list]
-   lassign [getSplitExtraListFromVersSpec $mod] spec_tag_list spec_xt_list
-   set check_extra [llength $spec_xt_list]
-   set check_tag [llength $spec_tag_list]
-   set scan_eval [expr {$check_variant || $check_extra || [isEltInReport\
-      variant 0]}]
-   set filter_res [expr {$check_variant || $check_extra || $check_tag}]
+   set check_variant [expr {[llength $spec_vr_list] > 0}]
+   set spec_xt_list [getExtraListFromVersSpec $mod]
+   set check_extra [expr {[llength $spec_xt_list] > 0}]
+   set filter_res [expr {$check_variant || $check_extra}]
 
-   if {$scan_eval} {
-      # disable error reporting to avoid modulefile errors (not coping with
-      # scan evaluation for instance) to pollute result
-      set alreadyinhibit [getState inhibit_errreport]
-      if {!$alreadyinhibit} {
-         inhibitErrorReport
-      }
-      # evaluate all modules found in scan mode to gather content information
-      lappendState mode scan
-   }
-
-   if {$check_tag} {
-      # load tags from loaded mods prior collecting tags found during rc eval
-      cacheCurrentModules 0
+   # disable error reporting to avoid modulefile errors (not coping with scan
+   # evaluation for instance) to pollute result
+   set alreadyinhibit [getState inhibit_errreport]
+   if {!$alreadyinhibit} {
+      inhibitErrorReport
    }
 
    set unset_list {}
    set keep_list {}
+   # evaluate all modules found in scan mode to gather content information
+   lappendState mode scan
    foreach elt [array names found_list] {
-      if {$check_tag} {
-         collectModuleTags $elt
-      }
-      # skip scan evaluation if only checking tags
-      if {$scan_eval} {
-         switch -- [lindex $found_list($elt) 0] {
-            modulefile - virtual {
-               # skip evaluation of fully forbidden modulefile
-               if {![isModuleTagged $elt forbidden 0 [lindex\
-                  $found_list($elt) 2]]} {
-                  ##nagelfar ignore Suspicious variable name
-                  execute-modulefile [lindex $found_list($elt) 2] $elt $elt\
-                     $elt 0 0 $modpath
-               }
+      switch -- [lindex $found_list($elt) 0] {
+         modulefile - virtual {
+            # skip evaluation of fully forbidden modulefile
+            if {![isModuleTagged $elt forbidden 0]} {
+               ##nagelfar ignore Suspicious variable name
+               execute-modulefile [lindex $found_list($elt) 2] $elt $elt $elt\
+                  0 0 $modpath
             }
          }
       }
-
       # unset elements that do not match extra query
       if {$filter_res} {
          switch -- [lindex $found_list($elt) 0] {
@@ -395,9 +351,6 @@ proc filterExtraMatchSearch {modpath mod res_arrname versmod_arrname} {
                if {$check_variant && ![doesModVariantMatch $elt\
                   $spec_vr_list]} {
                   lappend unset_list $elt
-               } elseif {$check_tag && ![doesModTagMatch $elt [lindex\
-                  $found_list($elt) 2] $spec_tag_list]} {
-                  lappend unset_list $elt
                } elseif {$check_extra} {
                   # know currently retained modules to later compute those
                   # to withdrawn
@@ -407,19 +360,7 @@ proc filterExtraMatchSearch {modpath mod res_arrname versmod_arrname} {
          }
       }
    }
-
-   if {$scan_eval} {
-      lpopState mode
-      # re-enable error report only is it was disabled from this procedure
-      if {!$alreadyinhibit} {
-         setState inhibit_errreport 0
-      }
-   }
-
-   if {$check_tag} {
-      # indicate tags have been collected for this modulepath
-      lappendState tags_collected_in $modpath
-   }
+   lpopState mode
 
    # get list of modules matching extra specifiers to determine those to not
    # matching that need to be withdrawn from result
@@ -435,23 +376,18 @@ proc filterExtraMatchSearch {modpath mod res_arrname versmod_arrname} {
       unset found_list($elt)
       # also unset any symbolic version pointing to unset elt
       if {[info exists versmod_list($elt)]} {
-         set eltsym_list $versmod_list($elt)
-         for {set i 0} {$i < [llength $eltsym_list]} {incr i} {
-            set eltsym [lindex $eltsym_list $i]
+         foreach eltsym $versmod_list($elt) {
             # getModules phase #2 may have already withdrawn symbol
             if {[info exists found_list($eltsym)]} {
                unset found_list($eltsym)
             }
-            # also unset symbolic version applying to dir name if removing
-            # default symbol
-            if {[file tail $eltsym] eq {default}} {
-               set eltdir [file dirname $eltsym]
-               if {[info exists versmod_list($eltdir)]} {
-                  lappend eltsym_list {*}$versmod_list($eltdir)
-               }
-            }
          }
       }
+   }
+
+   # re-enable error report only is it was disabled from this procedure
+   if {!$alreadyinhibit} {
+      setState inhibit_errreport 0
    }
 }
 

@@ -46,7 +46,7 @@ proc getMovementBetweenList {from to {extfrom {}} {extto {}} {cmp eq}} {
          ($cmp eq {eq} && $to_obj ne $from_obj) || $in_extfrom != $in_extto} {
          set list_equal 0
       }
-      if {!$list_equal} {
+      if {$list_equal == 0} {
          if {$to_obj ne {}} {
             lappend do $to_obj
          }
@@ -65,7 +65,7 @@ proc getSimplifiedLoadedModuleList {} {
    set curr_mod_list {}
    array set curr_tag_arr {}
    set modpathlist [getModulePathList]
-   foreach mod [getEnvLoadedModulePropertyParsedList name] {
+   foreach mod [getLoadedModulePropertyList name] {
       set altandsimplist [getLoadedAltAndSimplifiedName $mod]
 
       set parentmod [file dirname $mod]
@@ -86,7 +86,7 @@ proc getSimplifiedLoadedModuleList {} {
       lappend curr_mod_list $simplemodvr
       # record tags applying to module in simplified version form
       set tag_list [getSaveTagList $mod]
-      if {[llength $tag_list]} {
+      if {[llength $tag_list] > 0} {
          set curr_tag_arr($simplemodvr) $tag_list
       }
    }
@@ -116,7 +116,7 @@ proc findCollections {{coll *} {search glob} {swap_by_init 0} {errnomatch 0}\
       # collection is specified as a filepath
       set collfile $coll
    # elsewhere collection is a name
-   } elseif {[isEnvVarDefined HOME]} {
+   } elseif {[info exists ::env(HOME)]} {
       set collfile $::env(HOME)/.module/$coll
       # find saved collections (matching target suffix). a target is a domain
       # on which a collection is only valid. when a target is set, only the
@@ -232,7 +232,7 @@ proc formatCollectionContent {path_list mod_list tag_arrser header {sgr 0}} {
    # then add modules
    foreach mod $mod_list {
       # save tags associated to module (like auto-loaded tag)
-      if {[info exists tag_arr($mod)] && [llength $tag_arr($mod)]} {
+      if {[info exists tag_arr($mod)] && [llength $tag_arr($mod)] > 0} {
          set opt "--tag=[join $tag_arr($mod) :] "
       } else {
          set opt {}
@@ -244,7 +244,7 @@ proc formatCollectionContent {path_list mod_list tag_arrser header {sgr 0}} {
    }
 
    # prepend header if defined and some content has been generated
-   if {[string length $header] && [string length $content]} {
+   if {[string length $header] != 0 && [string length $content] != 0} {
       set content "$header\n$content"
    }
 
@@ -272,7 +272,7 @@ proc parseCollectionContent {fdata} {
 
    # analyze collection content
    foreach fline $fdata {
-      if {[regexp {module use (.*)$} $fline match patharg]} {
+      if {[regexp {module use (.*)$} $fline match patharg] == 1} {
          # paths are appended by default
          set stuff_path append
          # manage multiple paths and path options specified on single line,
@@ -302,7 +302,7 @@ proc parseCollectionContent {fdata} {
                }
             }
          }
-      } elseif {[regexp {module load (.*)$} $fline match modarg]} {
+      } elseif {[regexp {module load (.*)$} $fline match modarg] == 1} {
          # extract collection-specific flags from module specification
          switch -glob -- [lindex $modarg 0] {
             --notuasked {
@@ -335,8 +335,8 @@ proc parseCollectionContent {fdata} {
 proc getDiffBetweenCurEnvAndColl {collfile colldesc} {
    # read specific __init__ collection from __MODULES_LMINIT env var
    if {$collfile eq {__init__}} {
-      lassign [parseCollectionContent [getEnvLoadedModulePropertyParsedList\
-         init]] coll_path_list coll_mod_list coll_tag_arrser
+      lassign [parseCollectionContent [getLoadedModulePropertyList init]]\
+         coll_path_list coll_mod_list coll_tag_arrser
    } else {
       lassign [readCollectionContent $collfile $colldesc] coll_path_list\
          coll_mod_list coll_tag_arrser
@@ -353,8 +353,8 @@ proc getDiffBetweenCurEnvAndColl {collfile colldesc} {
 
    # collection should at least define a path or a mod, but initial env may be
    # totally empty
-   if {$collfile ne {__init__} && ![llength $coll_path_list] && ![llength\
-      $coll_mod_list]} {
+   if {$collfile ne {__init__} && [llength $coll_path_list] == 0 && [llength\
+      $coll_mod_list] == 0} {
       reportErrorAndExit "$colldesc is not a valid collection"
    }
 
@@ -366,7 +366,7 @@ proc getDiffBetweenCurEnvAndColl {collfile colldesc} {
    # fetch what is currently loaded
    set curr_path_list [getModulePathList returnempty 0]
    # get current loaded module list
-   set curr_mod_list [getEnvLoadedModulePropertyParsedList name]
+   set curr_mod_list [getLoadedModulePropertyList name]
    set curr_nuasked_list [getTaggedLoadedModuleList auto-loaded]
    # get current save tags of loaded modules
    array set curr_tag_arr [getLoadedModuleWithVariantSaveTagArrayList]
@@ -383,12 +383,12 @@ proc getDiffBetweenCurEnvAndColl {collfile colldesc} {
 
    # indicate if loaded modules that matches modules in collection have
    # different tags set
-   if {![llength $mod_to_load]} {
+   if {[llength $mod_to_load] == 0} {
       # consider a not-set entry as an empty element when comparing collection
       # and current environment tags. compare tags as unordered lists
       lassign [getDiffBetweenArray curr_tag_arr coll_tag_arr 1 1] notincoll\
          diff notincurr
-      set is_tags_diff [llength $diff]
+      set is_tags_diff [expr {[llength $diff] > 0}]
    # if some module from collection are not yet loaded, consider there is a
    # difference
    } else {

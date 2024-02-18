@@ -35,7 +35,7 @@ setenv_var MODULES_IMPLICIT_DEFAULT 1
 
 # check if stderr terminal attachment state is forced
 set is_stderr_tty [siteconfig_isStderrTty]
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tIs STDERR a TTY? = '$is_stderr_tty'\n"
 }
 
@@ -69,7 +69,7 @@ proc colorstr {str sgr {re_mode 0}} {
 
 # helper proc to generate color test and expected output
 proc color_test_case {modarg colorize {sgr {}}} {
-    if {!$::is_stderr_tty && $colorize} {
+    if {!$::is_stderr_tty && $colorize > 0} {
         incr colorize -1
     }
 
@@ -539,33 +539,6 @@ testouterr_cmd_re sh {avail --color=always -o key:indesym hide3/sym} OK $tserr
 unsetenv_var MODULES_COLORS
 unsetenv_var MODULES_ADVANCED_VERSION_SPEC
 setenv_path_var MODULEPATH $modpath
-
-
-#
-# alias/indesym rendering tests on list
-#
-
-setenv_var MODULES_COLORS {hi=1:db=2:tr=2:se=2:er=91:wa=93:me=95:in=94:mp=1;94:di=94:al=96:de=4:sy=95}
-setenv_loaded_module [list foo/1.0] [list $modpath.3/foo/1.0]
-setenv_var __MODULES_LMALTNAME foo/1.0&foo/bar&foo&al|alfoo
-
-#FIXME
-set tserr " 1\\) [sgr 96]alfoo[sgr 0]   2\\) foo/1.0[sgr 2]\\([sgr 22][sgr 95]bar[sgr 0][sgr 2]\\)[sgr 22]  
-
-Key:
-[sgr 2]\\([sgr 22][sgr 95]symbolic-version[sgr 0][sgr 2]\\)[sgr 22]  [sgr 96]module-alias[sgr 0]  "
-testouterr_cmd_re sh {list --color=always -o alias:idx:sym:key} OK $tserr
-set tserr " 1\\) [sgr 95]foo/bar[sgr 0] 
- 2\\) [sgr 96]alfoo[sgr 0] 
- 3\\) foo/1.0 
-
-Key:
-[sgr 95]symbolic-version[sgr 0]  [sgr 96]module-alias[sgr 0]  "
-testouterr_cmd_re sh {list --color=always -t -o alias:idx:indesym:sym:key} OK $tserr
-
-unsetenv_var __MODULES_LMALTNAME
-unsetenv_loaded_module
-unsetenv_var MODULES_COLORS
 
 
 #

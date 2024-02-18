@@ -711,8 +711,8 @@ proc shell_out {test_shell out_list {re_mode 0} {auto_status 1}} {
     }
 
     # specific order if var have been automatically set
-    if {[array size autovar] || [array size envxres] || [array size\
-        envunxres]} {
+    if {[array size autovar] > 0 || [array size envxres] > 0 ||\
+        [array size envunxres] > 0} {
         set answer_list {}
         foreach var [array names envvar] {
             lappend answer_list $envvar($var)
@@ -720,7 +720,7 @@ proc shell_out {test_shell out_list {re_mode 0} {auto_status 1}} {
         foreach var [array names envalias] {
             lappend answer_list $envalias($var)
         }
-        if {[array size envxres] || [array size envunxres]} {
+        if {[array size envxres] > 0 || [array size envunxres] > 0} {
             switch -- $test_shell {
                 {python} {
                     lappend answer_list "import subprocess"
@@ -745,7 +745,7 @@ proc shell_out {test_shell out_list {re_mode 0} {auto_status 1}} {
     }
 
     # add automatic status if any for shell
-    if {$auto_status && !$status_set && [llength $answer_list]} {
+    if {$auto_status && !$status_set && [llength $answer_list] > 0} {
         lappend answer_list [shell_ok $test_shell $re_mode]
     }
 
@@ -1236,7 +1236,7 @@ proc change_file_perms {name perms} {
     # backup original file permission to restore them later
     set file_orig_perms($name) [file attributes $name -permissions]
 
-    if {$verbose} {
+    if { $verbose > 0 } {
         send_user "\tChange permissions of file $name ($perms)\n"
     }
 
@@ -1247,7 +1247,7 @@ proc change_file_perms {name perms} {
 proc restore_file_perms {name} {
     global verbose file_orig_perms
 
-    if {$verbose} {
+    if { $verbose > 0 } {
         send_user "\tRestore permissions of file $name ($file_orig_perms($name))\n"
     }
 
@@ -1261,7 +1261,7 @@ proc restore_file_perms {name} {
 
 proc unsetenv_var {var} {
     if {[info exists ::env($var)]} {
-        if {$::verbose} {
+        if { $::verbose > 0 } {
             send_user "\tUnset $var\n"
         }
         unset ::env($var)
@@ -1275,7 +1275,7 @@ proc unsetenv_path_var {var} {
 }
 
 proc setenv_var {var val} {
-    if {$::verbose} {
+    if { $::verbose > 0 } {
         send_user "\tSetup $var = '$val'\n"
     }
     set ::env($var) $val
@@ -1298,7 +1298,7 @@ proc setenv_path_var {var args} {
             unset refcnt($elt)
         }
     }
-    if {[array size refcnt]} {
+    if {[array size refcnt] > 0} {
         setenv_var __MODULES_SHARE_$var [join [array get refcnt] ":"]
     } else {
         unsetenv_var __MODULES_SHARE_$var

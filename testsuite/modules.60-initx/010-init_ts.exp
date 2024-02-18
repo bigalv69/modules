@@ -45,7 +45,7 @@ proc _test_modules {shell cmd output} {
 
 	set tmp [exec cat "$env(HOME)/.modules" ]
 
-	if {$verbose} {
+	if { $verbose > 0 } {
 		send_user "Checking \"$shell\" $cmd -> \$HOME/.modules\n"
 	}
 

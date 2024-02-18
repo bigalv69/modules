@@ -1,1 +1,8 @@
-../../../../../modulerc4/bar/4.7/gcc/8.2.0/avx
+#%Module
+# Dummy modulefile for bar
+
+set version 4.7
+set compilerTag gcc/8.2.0
+set simdTag avx
+set moduledir [file dirname $ModulesCurrentModulefile]
+source $moduledir/../../../common

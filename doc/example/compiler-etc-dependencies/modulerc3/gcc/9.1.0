@@ -1,1 +1,6 @@
-../../modulerc4/gcc/9.1.0
+#%Module
+# Dummy modulefile for gcc
+
+set version 9.1.0
+set moduledir [file dirname $ModulesCurrentModulefile]
+source $moduledir/common

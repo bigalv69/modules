@@ -46,7 +46,7 @@ testouterr_cmd sh {lint lint/1.3} ERR [msg_lint $mp/lint/1.3 "$error_msgs: #%Mod
 testouterr_cmd sh {lint lint/1.4} ERR [msg_lint $mp/lint/1.4 "$error_msgs: #%Module\nsource ./1.2\nsource ./unk"]
 
 set nafelgar_script [glob -nocomplain nagelfar*/nagelfar.tcl]
-if {[string length $nafelgar_script]} {
+if {[string length $nafelgar_script] > 0} {
 
 setenv_var MODULES_TCL_LINTER $nafelgar_script
 
@@ -212,11 +212,11 @@ testouterr_cmd_re sh {lint -v -a} ERR $tserr
 
 # forbid modules returned
 # alias and virtual targets returned only once
-set lintmsgtagrc [list {ERROR   line 14: Wrong number of arguments (0) to "module-tag"}\
-{ERROR   line 17: Wrong number of arguments (1) to "module-tag"}\
-{ERROR   line 20: Bad option --foo to "module-tag"}\
-{ERROR   line 23: Bad option --before to "module-tag"}\
-{ERROR   line 26: Bad option --after to "module-tag"}]
+set lintmsgtagrc [list {ERROR   line 12: Wrong number of arguments (0) to "module-tag"}\
+{ERROR   line 15: Wrong number of arguments (1) to "module-tag"}\
+{ERROR   line 18: Bad option --foo to "module-tag"}\
+{ERROR   line 21: Bad option --before to "module-tag"}\
+{ERROR   line 24: Bad option --after to "module-tag"}]
 set tserr .*[escre [msg_lint $mpre/tag/.modulerc {*}$lintmsgtagrc]]\n\n[msg_lint $mpre/tag/1.0]\n[msg_lint $mpre/tag/4.0]\n[msg_lint $mpre/tag/5.0]\n.*
 testouterr_cmd_re sh {lint -v} ERR $tserr
 

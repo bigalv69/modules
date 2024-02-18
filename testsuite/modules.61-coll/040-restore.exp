@@ -51,7 +51,7 @@ set c22errmsg [escre "Loading $c22mod1{bar =:[join $c22mod1vr :]}\nLoading $c22m
 set c26errmsg [escre "Loading $c26mod1{[join $c26mod1vr :]} <aL>\nLoading $c26mod2 <aL>\nLoading '$c26mod3'{[join $c20mod3vr :]}"]
 
 # set HOME to location containing collections
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup HOME = $homewithcoll\n"
 }
 set env(HOME) "$homewithcoll"
@@ -206,7 +206,7 @@ testouterr_cmd_re "ALL" "restore $coll1fp" $ans "$c1errmsgf2"
 #
 
 # setup environment state
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup MODULES_COLLECTION_TARGET = $colltarget\n"
 }
 set env(MODULES_COLLECTION_TARGET) "$colltarget"
@@ -479,7 +479,7 @@ unsetenv_var __MODULES_LMINIT
 # test unsetting HOME
 #
 
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tUnset HOME \n"
 }
 unset env(HOME)
@@ -487,7 +487,7 @@ unset env(HOME)
 testouterr_cmd "sh" "restore" "ERR" $nohomeerrmsg
 
 # restore default testsuite home
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tRestore HOME = $ORIG_HOME\n"
 }
 set env(HOME) $ORIG_HOME
@@ -893,10 +893,8 @@ setenv_path_var MODULEPATH $c32modpath1
 setenv_loaded_module [list variant/8.0] [list $c32modpath1/variant/8.0]
 setenv_var __MODULES_LMVARIANT "variant/8.0&foo|val1|0|0&bar|2|0|1"
 setenv_var __MODULES_LMTAG variant/8.0&super-sticky
-setenv_var __MODULES_LMSTICKYRULE variant/8.0&super-sticky|variant\ foo=val1\ bar=2
 set ans [list]
 lappend ans [list set __MODULES_LMVARIANT $c32lmvr]
-lappend ans [list set __MODULES_LMSTICKYRULE $c32mod1&super-sticky|variant\ foo=val1\ bar=2]
 lappend ans [list set _LMFILES_ $c32lmf]
 lappend ans [list set LOADEDMODULES $c32lm]
 lappend ans [list set __MODULES_LMTAG $c32mod1tag]
@@ -910,11 +908,9 @@ setenv_var TESTSUITE_VARIANT_TAG coll33
 setenv_loaded_module [list variant/8.0] [list $c33modpath1/variant/8.0]
 setenv_var __MODULES_LMVARIANT "variant/8.0&foo|val1|0|0&bar|2|0|1"
 setenv_var __MODULES_LMTAG variant/8.0&super-sticky
-setenv_var __MODULES_LMSTICKYRULE variant/8.0&super-sticky|variant\ foo=val1\ bar=2
 # CORNER CASE: stickiness swap do not know that default value of variant bar matches sticky rule
 set ans [list]
 lappend ans [list set __MODULES_LMVARIANT variant/8.0&foo|val1|0|0&bar|2|0|1:$c33lmvr]
-lappend ans [list set __MODULES_LMSTICKYRULE variant/8.0&super-sticky|variant\ foo=val1\ bar=2:$c33mod1&super-sticky|variant\ foo=val1\ bar=2]
 lappend ans [list set _LMFILES_ $c33modpath1/variant/8.0:$c33lmf]
 lappend ans [list set LOADEDMODULES variant/8.0:$c33lm]
 lappend ans [list set __MODULES_LMTAG variant/8.0&super-sticky:$c33mod1tag]
@@ -926,7 +922,6 @@ testouterr_cmd_re sh "restore $coll33fp" $ans $tserr
 unsetenv_var MODULES_COLLECTION_PIN_VERSION
 unsetenv_var __MODULES_LMTAG
 unsetenv_var __MODULES_LMEXTRATAG
-unsetenv_var __MODULES_LMSTICKYRULE
 unsetenv_var TESTSUITE_VARIANT_TAG
 
 # restore collection with boolean variants

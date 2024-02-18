@@ -30,10 +30,6 @@ unsetenv_var MODULES_MCOOKIE_CHECK
 unsetenv_var MODULES_MCOOKIE_VERSION_CHECK
 # cache buffer size may be set if cache files have been prebuilt
 unsetenv_var MODULES_CACHE_BUFFER_BYTES
-unsetenv_var MODULES_STICKY_PURGE
-unsetenv_var MODULES_ABORT_ON_ERROR
-unsetenv_var MODULES_SOURCE_CACHE
-unsetenv_var MODULES_UNIQUE_NAME_LOADED
 unsetenv_var MODULES_AVAIL_OUTPUT
 unsetenv_var MODULES_AVAIL_TERSE_OUTPUT
 unsetenv_var MODULES_LIST_OUTPUT
@@ -53,7 +49,6 @@ set valid_darkbgcolors [expr {([llength [split $install_darkbgcolors {:=}]] % 2)
 set valid_lightbgcolors [expr {([llength [split $install_lightbgcolors {:=}]] % 2) == 0 ? $install_lightbgcolors : {}}]
 
 array set configdfl [list\
-    abort_on_error            $install_abortonerror\
     advanced_version_spec     [expr {$install_advversspec eq {y}}]\
     auto_handling             [expr {$install_autohandling eq {y}}]\
     avail_indepth             [expr {$install_availindepth eq {y}}]\
@@ -97,15 +92,12 @@ array set configdfl [list\
     shells_with_ksh_fpath     {}\
     silent_shell_debug        [expr {$install_silentshdbgsupport eq {y}}]\
     siteconfig                $siteconfig_filere\
-    source_cache              [expr {$install_sourcecache eq {y}}]\
-    sticky_purge              $install_stickypurge\
     tcl_ext_lib               lib/libtclenvmodules$install_shlib_suffix\
     tcl_linter                $install_tcllintercmd\
     tag_abbrev                $install_tagabbrev\
     tag_color_name            $install_tagcolorname\
     term_background           $install_termbg\
     term_width                0\
-    unique_name_loaded        [expr {$install_uniquenameloaded eq {y}}]\
     unload_match_order        $install_unloadmatchorder\
     variant_shortcut          "$install_variantshortcut"\
     verbosity                 $install_verbosity\
@@ -113,7 +105,6 @@ array set configdfl [list\
 ]
 
 array set configvar [list\
-    abort_on_error            MODULES_ABORT_ON_ERROR\
     advanced_version_spec     MODULES_ADVANCED_VERSION_SPEC\
     auto_handling             MODULES_AUTO_HANDLING\
     avail_indepth             MODULES_AVAIL_INDEPTH\
@@ -153,14 +144,11 @@ array set configvar [list\
     set_shell_startup         MODULES_SET_SHELL_STARTUP\
     shells_with_ksh_fpath     MODULES_SHELLS_WITH_KSH_FPATH\
     silent_shell_debug        MODULES_SILENT_SHELL_DEBUG\
-    source_cache              MODULES_SOURCE_CACHE\
-    sticky_purge              MODULES_STICKY_PURGE\
     tag_abbrev                MODULES_TAG_ABBREV\
     tag_color_name            MODULES_TAG_COLOR_NAME\
     tcl_linter                MODULES_TCL_LINTER\
     term_background           MODULES_TERM_BACKGROUND\
     term_width                MODULES_TERM_WIDTH\
-    unique_name_loaded        MODULES_UNIQUE_NAME_LOADED\
     unload_match_order        MODULES_UNLOAD_MATCH_ORDER\
     variant_shortcut          MODULES_VARIANT_SHORTCUT\
     verbosity                 MODULES_VERBOSITY\
@@ -168,7 +156,6 @@ array set configvar [list\
 ]
 
 array set configvalid [list\
-    abort_on_error            {load ml mod-to-sh purge reload switch switch_unload try-load unload}\
     advanced_version_spec     {0 1}\
     auto_handling             {0 1}\
     avail_indepth             {0 1}\
@@ -185,8 +172,8 @@ array set configvalid [list\
     ignore_user_rc              {0 1}\
     implicit_default          {0 1}\
     implicit_requirement      {0 1}\
-    list_output               {header idx variant alias indesym sym tag key}\
-    list_terse_output         {header idx variant alias indesym sym tag key}\
+    list_output               {header idx variant sym tag key}\
+    list_terse_output         {header idx variant sym tag key}\
     mcookie_check             {eval always}\
     mcookie_version_check     {0 1}\
     ml                        {0 1}\
@@ -197,18 +184,14 @@ array set configvalid [list\
     set_shell_startup         {0 1}\
     shells_with_ksh_fpath     {sh bash csh tcsh fish}\
     silent_shell_debug        {0 1}\
-    source_cache              {0 1}\
-    sticky_purge              {error warning silent}\
     term_background           {dark light}\
     term_width                {0 1000}\
-    unique_name_loaded        {0 1}\
     unload_match_order        {returnlast returnfirst}\
     verbosity                 {silent concise normal verbose verbose2 trace debug debug2}\
     wa_277                    {0 1}\
 ]
 
 array set configvalidkind [list\
-    abort_on_error            eltlist\
     avail_output              eltlist\
     avail_terse_output        eltlist\
     cache_buffer_bytes        intbe\
@@ -226,14 +209,12 @@ array set configlockable [list\
 ]
 
 array set configkind [list\
-    abort_on_error            l\
     avail_output              l\
     avail_terse_output        l\
     colors                    l\
     list_output               l\
     list_terse_output         l\
     protected_envvars         l\
-    rcfile                    l\
     shells_with_ksh_fpath     l\
     tag_abbrev                l\
     tag_color_name            l\
@@ -289,11 +270,10 @@ foreach param [array names configvalid] {
                 # invalid value test
                 set tserr [if_configlocked $param [err_conflocked $param] "$error_msgs: Invalid element in value list for config. option '$param'\n  Allowed elements are: $configvalid($param) (separated by ':')"]
                 testouterr_cmd sh "config $param foo" ERR $tserr
-                set range_end [expr {[llength $configvalid($param)] < 4 ? {end-1} : {end-2}}]
                 # badly separated value list
-                set val [join [lrange $configvalid($param) 0 $range_end] ,]
+                set val [join [lrange $configvalid($param) 0 end-2] ,]
                 testouterr_cmd sh "config $param $val" ERR $tserr
-                set val [join [lrange $configvalid($param) 0 $range_end] {\ }]
+                set val [join [lrange $configvalid($param) 0 end-2] {\ }]
                 testouterr_cmd sh "config $param $val" ERR $tserr
             }
             intbe {

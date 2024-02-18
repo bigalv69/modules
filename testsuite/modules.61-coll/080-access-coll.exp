@@ -77,7 +77,7 @@ set hide_perms "ugo-rx"
 set write_perms "ugo-w"
 
 # set HOME to location containing collections
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tSetup HOME = $homewithcoll\n"
 }
 set env(HOME) "$homewithcoll"

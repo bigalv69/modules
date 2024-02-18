@@ -166,8 +166,8 @@ proc getUnloadingModuleList {} {
 proc sortModulePerLoadedAndDepOrder {modlist {nporeq 0} {loading 0}} {
    # sort per loaded order
    set sortlist {}
-   if {[llength $modlist]} {
-      foreach lmmod [getEnvLoadedModulePropertyParsedList name] {
+   if {[llength $modlist] > 0} {
+      foreach lmmod [getLoadedModulePropertyList name] {
          if {$lmmod in $modlist} {
             lappend sortlist $lmmod
          }
@@ -253,7 +253,7 @@ proc getUnmetDependentLoadedModuleList {modnamevr} {
                            # temporarily remove matching violation
                            set ::g_prereqViolation($depmod) [replaceFromList\
                               $::g_prereqViolation($depmod) $prereq]
-                           if {![llength $::g_prereqViolation($depmod)]} {
+                           if {[llength $::g_prereqViolation($depmod)] == 0} {
                               unset ::g_prereqViolation($depmod)
                            }
                            break
@@ -339,7 +339,7 @@ proc getDirectDependentList {mod {strong 0} {nporeq 0} {loading 0}\
 
    # take currently loading modules into account if asked
    if {$loading} {
-      set modlist [getEnvLoadedModulePropertyParsedList name]
+      set modlist [getLoadedModulePropertyList name]
       defineModEqProc [isIcase] [getConf extended_default] 1
       # reverse list to get closest match if returning lastly loaded module
       if {[getConf unload_match_order] eq {returnlast}} {
@@ -449,7 +449,7 @@ proc getDependentLoadedModuleList {modlist {strong 1} {direct 1} {nporeq 0}\
 proc isModuleUnloadable {mod {unmodlist {}}} {
    set ret 1
    # get currently unloading modules if no specific unmodlist set
-   if {![llength $unmodlist]} {
+   if {[llength $unmodlist] == 0} {
       set unmodlist [getUnloadingModuleList]
    }
 
@@ -620,20 +620,6 @@ proc restoreSettings {} {
       (#[getSavedSettingsStackDepth])"
 }
 
-# clear environment change related variables to undo modifications produced by
-# evaluated modulefile(s)
-proc flushEnvSettings {} {
-   foreach var {g_Aliases g_stateEnvVars g_stateAliases g_stateFunctions\
-      g_Functions g_stateCompletes g_Completes g_newXResources\
-      g_delXResources g_changeDir g_stdoutPuts g_prestdoutPuts\
-      g_return_text} {
-      ##nagelfar ignore #2 Suspicious variable name
-      if {[info exists ::$var]} {
-         unset ::$var
-      }
-   }
-}
-
 # load modules passed as args designated as requirement
 proc loadRequirementModuleList {tryload optional tag_list args} {
    set ret 0
@@ -649,17 +635,14 @@ proc loadRequirementModuleList {tryload optional tag_list args} {
       }
    }
 
-   if {![llength $loadedmod_list]} {
+   if {[llength $loadedmod_list] == 0} {
       set imax [llength $args]
       # if prereq list specified, try to load first then
       # try next if load of first module not successful
-      for {set i 0} {$i<$imax && !$prereqloaded} {incr i 1} {
+      for {set i 0} {$i<$imax && $prereqloaded==0} {incr i 1} {
          set arg [lindex $args $i]
 
-         # hold output from current evaluation to catch 'module not found'
-         # message that occurs outside of sub evaluation
-         lappendState reportholdrecid [currentState msgrecordid]
-         # hold output of each sub evaluation until they are all done to drop
+         # hold output of each evaluation until they are all done to drop
          # those that failed if one succeed or if optional
          set curholdid load-$i-$arg
          lappendState reportholdid $curholdid
@@ -668,7 +651,6 @@ proc loadRequirementModuleList {tryload optional tag_list args} {
             # if an error is raised, release output and rethrow the error
             # (could be raised if no modulepath defined for instance)
             lpopState reportholdid
-            lpopState reportholdrecid
             lappend holdidlist $curholdid report
             releaseHeldReport {*}$holdidlist
             knerror $errorMsg
@@ -678,7 +660,6 @@ proc loadRequirementModuleList {tryload optional tag_list args} {
             set ret $retlo
          }
          lpopState reportholdid
-         lpopState reportholdrecid
 
          if {[is-loaded $arg]} {
             set prereqloaded 1
@@ -706,7 +687,8 @@ proc loadRequirementModuleList {tryload optional tag_list args} {
 }
 
 # unload phase of a list of modules reload process
-proc reloadModuleListUnloadPhase {lmname {errmsgtpl {}} {context unload}} {
+proc reloadModuleListUnloadPhase {lmname {force 0} {errmsgtpl {}} {context\
+   unload}} {
    upvar $lmname lmlist
    # unload one by one to ensure same behavior whatever auto_handling state
    foreach mod [lreverse $lmlist] {
@@ -723,14 +705,17 @@ proc reloadModuleListUnloadPhase {lmname {errmsgtpl {}} {context unload}} {
       # (violation state) as modules are loaded again just after
       if {[cmdModuleUnload $context match 0 1 0 0 $mod]} {
          # avoid failing module on load phase
-         # if force state is enabled, cmdModuleUnload returns 0
          set lmlist [replaceFromList $lmlist $mod]
          set errMsg [string map [list _MOD_ [getModuleDesignation loaded\
             $mod]] $errmsgtpl]
-         lpopState reloading_sticky
-         lpopState reloading_supersticky
-         # no process stop if ongoing reload command in continue behavior
-         if {![isStateEqual commandname reload] || [commandAbortOnError]} {
+         if {$force} {
+            # errMsg will always be set as force mode could not be enabled
+            # for reload sub-cmd which provides an empty msg template
+            reportWarning $errMsg 1
+         # stop if one unload fails unless force mode enabled
+         } else {
+            lpopState reloading_sticky
+            lpopState reloading_supersticky
             knerror $errMsg
          }
       }
@@ -742,7 +727,7 @@ proc reloadModuleListUnloadPhase {lmname {errmsgtpl {}} {context unload}} {
 
 # load phase of a list of modules reload process
 proc reloadModuleListLoadPhase {lmname isuaskedlist vrlist extrataglist\
-   {errmsgtpl {}} {context load}} {
+   {force 0} {errmsgtpl {}} {context load}} {
    upvar $lmname lmlist
    array set isuasked $isuaskedlist
    array set vr $vrlist
@@ -760,16 +745,10 @@ proc reloadModuleListLoadPhase {lmname isuaskedlist vrlist extrataglist\
          $modnamevr]} {
          set errMsg [string map [list _MOD_ [getModuleDesignation spec\
             $modnamevr]] $errmsgtpl]
-         # no process stop if forced, or ongoing reload or switch cmd in
-         # continue behavior, or non-top switch cmd
-         if {[getState force] || (([isStateEqual commandname reload] ||\
-            [isStateEqual commandname switch]) && ![commandAbortOnError]) ||\
-            ([getCallingProcName] eq {cmdModuleSwitch} &&\
-            ![isTopEvaluation])} {
-            # no msg for reload sub-cmd which provides an empty msg template
-            if {[string length $errMsg]} {
-               reportWarning $errMsg 1
-            }
+         if {$force} {
+            # errMsg will always be set as force mode could not be enabled
+            # for reload sub-cmd which provides an empty msg template
+            reportWarning $errMsg 1
          # stop if one load fails unless force mode enabled
          } else {
             knerror $errMsg
@@ -781,49 +760,33 @@ proc reloadModuleListLoadPhase {lmname isuaskedlist vrlist extrataglist\
 
 # test if loaded module 'mod' is sticky and if stickiness definition applies
 # to one of the reloading module
-proc isStickinessReloading {mod reloading_mod_list {tag sticky}} {
+proc isStickinessReloading {mod reloading_modlist {tag sticky}} {
    set res 0
-   set mod_name_vers [getModuleNameAndVersFromVersSpec $mod]
-   if {[isModuleTagged $mod_name_vers $tag 1]} {
-      # sticky rules (module-tag definitions) applying to loaded module have
-      # been evaluated when charging loaded environment
-      set full_path_mod [getModulefileFromLoadedModule $mod_name_vers]
-      set tag_rule_list [getModuleTagRuleList $mod $full_path_mod $tag]
+   set modname [getModuleNameAndVersFromVersSpec $mod]
+   if {[isModuleTagged $modname $tag 1]} {
+      # evaluate the module-tag commands that are related to mod
+      set dir [getModulepathFromModuleName [getModulefileFromLoadedModule\
+         $modname] $modname]
+      getModules $dir $modname 0 [list rc_defs_included]
 
-      # no rule found (in env), means sticky applies to exact same module
-      if {![llength $tag_rule_list]} {
-         set mod_should_reload 1
+      set tmodspec [getModuleTag $mod $tag equal 1]
+      # if tag specifically applies to fully qualified module, exact same
+      # module should be found in reload list
+      if {$tmodspec ne {}} {
+         set tmodspec $mod
       } else {
-         set mod_should_reload 0
-         # if tag specifically applies to fully qualified module or module
-         # name and version, exact same module should be found in reload list
-         foreach tag_rule $tag_rule_list {
-            if {[modEq $tag_rule $mod equal 1 0 1] || [modEq $tag_rule\
-               $full_path_mod equal 1 0 1]} {
-               set mod_should_reload 1
-               break
-            }
-         }
+         set tmodspec [getModuleTag $mod $tag eqstart 1]
       }
 
-      if {$mod_should_reload} {
-         set res [expr {$mod in $reloading_mod_list}]
-      } else {
-         # check if a reloading module satisfies each sticky rules
-         foreach tag_rule $tag_rule_list {
-            set res 0
-            foreach reloading_mod $reloading_mod_list {
-               if {[modEq $tag_rule $reloading_mod eqstart 1 0 1]} {
-                  set res 1
-                  break
-               }
-            }
-            if {!$res} {
-               break
-            }
+      # check if a loading mod satisfies sticky rules
+      foreach modlo $reloading_modlist {
+         if {[modEq $tmodspec $modlo eqstart 1 0 1]} {
+            # found match
+            set res 1
+            break
          }
       }
-      reportDebug "stickiness ($tag), applying to $tag_rule_list, is\
+      reportDebug "stickiness ($tag) applies to '$tmodspec', is\
          reloading=$res"
    }
 

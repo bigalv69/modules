@@ -32,7 +32,7 @@ set bad_shell	"$error_msgs: Unknown shell type '(\[^ \t\n'\]+)'"
 # The tests
 #
 
-if {$verbose} {
+if { $verbose > 0 } {
     send_user "\tChecking user shells as arg 1 of modulecmd ...\n"
 }
 
