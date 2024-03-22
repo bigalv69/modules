@@ -8,99 +8,8 @@ Modules. It provides an overview of the new features and changed behaviors
 that will be encountered when upgrading.
 
 
-v5.4 (not yet released)
-=======================
-
-This new version is backward-compatible with previous version 5 release. It
-fixes bugs but also introduces new functionalities that are described in this
-section. See the :ref:`5.4 release notes<5.4 release notes>` for a complete
-list of the changes between Modules v5.3 and v5.4.
-
-Purging sticky modules
-----------------------
-
-The :mconfig:`sticky_purge` configuration option is added to define the
-behavior of :subcmd:`purge` sub-command when unloading a sticky or
-super-sticky module.
-
-By default an ``error`` is raised. :mconfig:`sticky_purge` can be changed to
-emit a ``warning`` message instead or to be ``silent``.
-
-.. parsed-literal::
-
-    $ module purge
-    Unloading :sgrshi:`foo/1.0`
-      :sgrer:`ERROR`: Unload of sticky module skipped
-    $ module config sticky_purge warning
-    $ module purge
-    Unloading :sgrshi:`foo/1.0`
-      :sgrwa:`WARNING`: Unload of sticky module skipped
-    $ module config sticky_purge silent
-    $ module purge
-    $ module list
-    Currently Loaded Modulefiles:
-     1) :sgrs:`foo/1.0`
-
-    Key:
-    :sgrs:`sticky`
-
-
-Specific modulepath labels
---------------------------
-
-:mfcmd:`modulepath-label` command is introduced to define a label to use to
-designate modulepath in module :subcmd:`avail` output. This new command should
-be used in global or modulepath-specific rc files.
-
-.. parsed-literal::
-
-    :ps:`$` cat /path/to/modulefiles/.modulerc
-    #%Module
-    modulepath-label . Tools
-    :ps:`$` module avail foo
-    ---------------------- :sgrdi:`Tools` ----------------------
-    foo/1.0  foo/2.0
-
-Unique module name loaded
--------------------------
-
-The configuration option :mconfig:`unique_name_loaded` is introduced to allow
-only one module loaded per module name. It is similar to the *One name rule*
-feature introduced by the `Lmod`_ project.
-
-When enabled, :mconfig:`unique_name_loaded` produces a conflict definition
-at the start of modulefile evaluation for each actual and alternative module
-root name. For instance when loading a module named ``foo/sub/1.0`` with a
-``qux/1.0`` alias, it produces a conflict against ``foo`` and ``qux``.
-
-When loading a module that shares a name with an already loaded module, an
-error is raised due to the conflict definition. This error aborts the module
-load evaluation.
-
-.. parsed-literal::
-
-    :ps:`$` cat /path/to/modulefiles/bar/1.0
-    #%Module
-    :ps:`$` cat /path/to/modulefiles/bar/2.0
-    #%Module
-    :ps:`$` module config unique_name_loaded 1
-    :ps:`$` module load bar/1.0
-    :ps:`$` module load bar/2.0
-    Loading :sgrhi:`bar/2.0`
-      :sgrer:`ERROR`: Module cannot be loaded due to a conflict.
-        HINT: Might try "module unload bar" first.
-
-:mconfig:`unique_name_loaded` is disabled by default. It can be changed with
-module :subcmd:`config` sub-command or at installation time with
-:instopt:`--enable-unique-name-loaded` configure script option.
-
 v5.3
 ====
-
-This new version is backward-compatible with previous version 5 release. It
-fixes bugs but also introduces new functionalities that are described in this
-section. See the :ref:`5.3 release notes<5.3 release notes>` for a complete
-list of the changes between Modules v5.2 and v5.3.
 
 Module cache
 ------------
@@ -1904,7 +1813,7 @@ the module names:
     :ps:`$` ml -o idx:sym
      1) :sgrde:`bar/1.0`   2) foo/2.0
 
-When the new configuration options or command line switches are set to an
+When the new configuration options command line switches are set to an
 empty value, the module names are the sole information reported:
 
 .. parsed-literal::

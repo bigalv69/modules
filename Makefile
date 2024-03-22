@@ -329,12 +329,6 @@ else
   setadvversspec := 0
 endif
 
-ifeq ($(uniquenameloaded),y)
-  setuniquenameloaded := 1
-else
-  setuniquenameloaded := 0
-endif
-
 ifeq ($(ml),y)
   setml := 1
 else
@@ -401,14 +395,12 @@ sed -e 's|@prefix@|$(prefix)|g' \
 	-e 's|@implicitdefault@|$(setimplicitdefault)|g' \
 	-e 's|@extendeddefault@|$(setextendeddefault)|g' \
 	-e 's|@advversspec@|$(setadvversspec)|g' \
-	-e 's|@uniquenameloaded@|$(setuniquenameloaded)|g' \
 	-e 's|@searchmatch@|$(searchmatch)|g' \
 	-e 's|@wa277@|$(setwa277)|g' \
 	-e 's|@icase@|$(icase)|g' \
 	-e 's|@nearlyforbiddendays@|$(nearlyforbiddendays)|g' \
 	-e 's|@tagabbrev@|$(tagabbrev)|g' \
 	-e 's|@tagcolorname@|$(tagcolorname)|g' \
-	-e 's|@stickypurge@|$(stickypurge)|g' \
 	-e 's|@availoutput@|$(availoutput)|g' \
 	-e 's|@availterseoutput@|$(availterseoutput)|g' \
 	-e 's|@listoutput@|$(listoutput)|g' \

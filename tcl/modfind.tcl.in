@@ -523,28 +523,16 @@ proc getModulePathList {{behavior returnempty} {resolv_var 1} {set_abs 1}} {
    return $modpath_list
 }
 
-proc getModulepathLabel {modpath} {
-   if {[info exists ::g_modulepathLabel($modpath)]} {
-      set label $::g_modulepathLabel($modpath)
-   } else {
-      set label $modpath
-   }
-   return $label
-}
-
 # return list of the configured and existing global RC files
 proc getGlobalRcFileList {} {
    set rclist {}
 
-   set rcfilelist [split [getConf rcfile] :]
-   if {[llength $rcfilelist] > 0} {
-      foreach rcfile $rcfilelist {
-         # if rcfile is a dir, look at a modulerc file in it
-         if {[file isdirectory $rcfile] && [file isfile $rcfile/modulerc]} {
-            lappend rclist $rcfile/modulerc
-         } elseif {[file isfile $rcfile]} {
-            lappend rclist $rcfile
-         }
+   if {[set rcfile [getConf rcfile]] ne {}} {
+      # if MODULERCFILE is a dir, look at a modulerc file in it
+      if {[file isdirectory $rcfile] && [file isfile $rcfile/modulerc]} {
+         lappend rclist $rcfile/modulerc
+      } elseif {[file isfile $rcfile]} {
+         lappend rclist $rcfile
       }
    }
    if {[file isfile {@etcdir@/rc}]} {
@@ -566,19 +554,7 @@ proc getGlobalRcFileList {} {
    return $readable_rclist
 }
 
-proc getModuleTag {mod fpmod tag {cmp eqstart} {return_rule 0}} {
-   # check if tag is set on full path module designation (no prop there)
-   if {$fpmod ne {} && [info exists ::g_moduleTagFullPath($fpmod)]} {
-      if {$tag in $::g_moduleTagFullPath($fpmod)} {
-         if {$return_rule} {
-            return $fpmod
-         } else {
-            set idx [lsearch -exact $::g_moduleTagFullPath($fpmod) $tag]
-            return [list $tag [lindex $::g_moduleTagFullPathSpec($fpmod)\
-               $idx]]
-         }
-      }
-   }
+proc getModuleTag {mod tag {cmp eqstart} {return_rule 0}} {
    set modroot [getModuleRootFromVersSpec $mod]
    # look if mod matches one of the module specs applying to mod root
    if {[info exists ::g_moduleTagRoot($modroot)]} {
@@ -602,12 +578,12 @@ proc getModuleTag {mod fpmod tag {cmp eqstart} {return_rule 0}} {
    return {}
 }
 
-proc isModuleTagged {mod tag {collected 0} {fpmod {}}} {
+proc isModuleTagged {mod tag {collected 0}} {
    # retrieve tag information from collected tags or raw info
    if {$collected} {
-      return [expr {$tag in [getTagList $mod $fpmod]}]
+      return [expr {$tag in [getTagList $mod]}]
    } else {
-      return [expr {[llength [getModuleTag $mod $fpmod $tag]] != 0}]
+      return [expr {[llength [getModuleTag $mod $tag]] != 0}]
    }
 }
 
@@ -621,9 +597,9 @@ proc getTaggedLoadedModuleList {tag} {
    return $modlist
 }
 
-proc getModuleTagProp {mod fpmod tag prop} {
+proc getModuleTagProp {mod tag prop} {
    set ret {}
-   array set tags [getModuleTag $mod $fpmod $tag]
+   array set tags [getModuleTag $mod $tag]
 
    if {[info exists tags($tag)]} {
       array set props $tags($tag)
@@ -687,30 +663,24 @@ proc unsetModuleExtraTag {mod args} {
    }
 }
 
-proc getTagList {mod {fpmod {}} {sort 1}} {
-   set tag_list {}
-   # get tags applied over module full path designation
-   if {$fpmod ne {} && [info exists ::g_moduleTagFullPath($fpmod)]} {
-      appendNoDupToList tag_list {*}$::g_moduleTagFullPath($fpmod)
-   }
-   # get collected tags applied on short designation
+proc getTagList {mod {sort 1}} {
    if {[info exists ::g_tagHash($mod)]} {
-      appendNoDupToList tag_list {*}$::g_tagHash($mod)
-   }
-   if {[llength $tag_list] > 0} {
       if {$sort} {
-         set tag_list [lsort -dictionary $tag_list]
+         set ret [lsort -dictionary $::g_tagHash($mod)]
+      } else {
+         set ret $::g_tagHash($mod)
       }
-      reportDebug "'$mod' has tag list '$tag_list'"
+      reportDebug "'$mod' has tag list '$ret'"
+   } else {
+      set ret {}
    }
-   return $tag_list
+   return $ret
 }
 
 # return tags applying to mod that can be exported
-proc getExportTagList {mod {serialized 0} {fpmod {}}} {
+proc getExportTagList {mod {serialized 0}} {
    # remove loaded/hidden tags from the list to register
-   lassign [getDiffBetweenList [getTagList $mod $fpmod 0] [list loaded\
-      hidden]] ret
+   lassign [getDiffBetweenList [getTagList $mod 0] [list loaded hidden]] ret
    if {$serialized && [llength $ret] > 0} {
       # extract mod name and version from full spec with variants
       set ret [join [list [getModuleNameAndVersFromVersSpec $mod] {*}$ret]\
@@ -771,18 +741,6 @@ proc abbrevTagList {taglist} {
    return [lsort -dictionary $ret]
 }
 
-proc getTagFromAbbrev {abbrev} {
-   if {![array exists ::g_abbrevTag]} {
-      getConf tag_abbrev
-   }
-   if {[info exists ::g_abbrevTag($abbrev)]} {
-      set tag $::g_abbrevTag($abbrev)
-   } else {
-      set tag {}
-   }
-   return $tag
-}
-
 proc getVariantList {mod {report 0} {excl_dflval 0} {from 0}} {
    set vrspeclist {}
    set loadedsgrkey {}
@@ -796,11 +754,7 @@ proc getVariantList {mod {report 0} {excl_dflval 0} {from 0}} {
       }
       1 {
          # module specification
-         set vrspeclist {}
-         foreach vrspec [getVariantListFromVersSpec $mod] {
-            lassign $vrspec vrname vrvalisbool vrvalue
-            lappend vrspeclist [list $vrname $vrvalue $vrvalisbool]
-         }
+         set vrspeclist [getVariantListFromVersSpec $mod]
       }
       2 {
          # variant definition collected during scan evaluation
@@ -906,7 +860,7 @@ proc getVariantList {mod {report 0} {excl_dflval 0} {from 0}} {
          4 {lappend ret $vrname $vrarr($vrname) $vrisbool($vrname)}
          3 {lappend ret $vrname [lindex $vrarr($vrname) 0] [lindex\
             $vrarr($vrname) 1]}
-         2 {lappend ret [list $vrname $vrisbool($vrname) $vrarr($vrname)]}
+         2 {lappend ret [list $vrname $vrarr($vrname) $vrisbool($vrname)]}
          1 - 5 - 6 {
             if {$vrisbool($vrname)} {
                if {$vrarr($vrname)} {
@@ -999,22 +953,11 @@ proc isModuleDotHidden {mod} {
    return 0
 }
 
-proc getModuleHidingLevel {mod fpmod} {
-   # if full path module has been hidden, this hidden level is the base level
-   # value we will return
-   set baselvl [expr {$fpmod ne {} && [info exists\
-      ::g_moduleHideFullPath($fpmod)] ? $::g_moduleHideFullPath($fpmod) :\
-      {-1}}]
-
+proc getModuleHidingLevel {mod} {
    set modroot [lindex [file split $mod] 0]
    # look if mod matches one of the hidden module specs applying to mod root
    if {[info exists ::g_moduleHideRoot($modroot)]} {
       for {set lvl 2} {$lvl > -1} {incr lvl -1} {
-         # no need to search anymore if we have reached same hiding level as
-         # one defined on full path module designation
-         if {$lvl == $baselvl} {
-            break
-         }
          foreach hmodspec [lindex $::g_moduleHideRoot($modroot) $lvl] {
             if {[modEq $hmodspec $mod eqstart 1 0 1 {}]} {
                return $lvl
@@ -1022,7 +965,7 @@ proc getModuleHidingLevel {mod fpmod} {
          }
       }
    }
-   return $baselvl
+   return -1
 }
 
 proc setModspecHidingLevel {modspec lvl} {
@@ -1032,20 +975,16 @@ proc setModspecHidingLevel {modspec lvl} {
       reportDebug "Record hidden module specification '$modspec' (lvl=$lvl)"
       set ::g_moduleHide($modspec) $lvl
 
-      if {[isModuleFullPath $modspec]} {
-         set ::g_moduleHideFullPath($modspec) $lvl
-      } else {
-         # record hidden mod spec for mod root to optimize search
-         set modroot [getModuleRootFromVersSpec $modspec]
-         if {![info exists ::g_moduleHideRoot($modroot)]} {
-            set ::g_moduleHideRoot($modroot) [list [list] [list] [list]]
-         }
-         # record in list corresponding to hidden level to search from
-         # strongest to weakest hidden level
-         set hiderootlvllist [lindex $::g_moduleHideRoot($modroot) $lvl]
-         lappend hiderootlvllist $modspec
-         lset ::g_moduleHideRoot($modroot) $lvl $hiderootlvllist
+      # record hidden mod spec for mod root to optimize search
+      set modroot [getModuleRootFromVersSpec $modspec]
+      if {![info exists ::g_moduleHideRoot($modroot)]} {
+         set ::g_moduleHideRoot($modroot) [list [list] [list] [list]]
       }
+      # record in list corresponding to hidden level to search from strongest
+      # to weakest hidden level
+      set hiderootlvllist [lindex $::g_moduleHideRoot($modroot) $lvl]
+      lappend hiderootlvllist $modspec
+      lset ::g_moduleHideRoot($modroot) $lvl $hiderootlvllist
    }
 }
 
@@ -1053,9 +992,8 @@ proc setModspecHidingLevel {modspec lvl} {
 # dot character. mod is considered hidden depending on their hiding level,
 # current search query and hiding threshold. when retdetails option is
 # enabled, mod hiding level and query match hind are also returned
-# also checks full path module designation if fpmod is set
-proc isModuleHidden {mod {modspec {}} {retdetails 0} {fpmod {}}} {
-   set defhidlvl [set hidlvl [getModuleHidingLevel $mod $fpmod]]
+proc isModuleHidden {mod {modspec {}} {retdetails 0}} {
+   set defhidlvl [set hidlvl [getModuleHidingLevel $mod]]
    if {$hidlvl >= [getState hiding_threshold]} {
       # soft hidden mods are considered matched if their root name matches
       # search query, other kind of hidden mods must fully matches query
@@ -1192,7 +1130,7 @@ proc getPathToModule {mod {indir {}} {report_issue 1} {look_loaded no}\
                         set mod $mod/[lindex $mod_list($mod) 1]
                         # restart search if default element is an hidden dir
                         if {![info exists mod_list($mod)] && [isModuleHidden\
-                           $mod $modspec 0 $dir/$mod]} {
+                           $mod $modspec]} {
                            # add specified variants to current resolution
                            if {[llength $vrlist] > 0} {
                               lassign [parseModuleSpecification 0 0 0 0 $mod\
@@ -1238,9 +1176,9 @@ proc getPathToModule {mod {indir {}} {report_issue 1} {look_loaded no}\
          set modnamevr [lindex $retlist 1]
       }
       # update result if forbidden
-      if {[isModuleTagged $modnamevr forbidden 0 [lindex $retlist 0]]} {
+      if {[isModuleTagged $modnamevr forbidden]} {
          set retlist [list {} [lindex $retlist 1] [lindex $retlist 2]\
-            accesserr [getForbiddenMsg $modnamevr [lindex $retlist 0]]]
+            accesserr [getForbiddenMsg $modnamevr]]
       }
    }
    if {[lindex $retlist 0] ne {}} {
@@ -2827,8 +2765,7 @@ proc getModules {dir {mod {}} {fetch_mtime 0} {search {}} {filter {}}} {
          unset found_list($elt)
          continue
       }
-      if {[lassign [isModuleHidden $elt $mod 1 [lindex $found_list($elt) 2]]\
-         hidlvl hidmatch hidbydef]} {
+      if {[lassign [isModuleHidden $elt $mod 1] hidlvl hidmatch hidbydef]} {
          # is there a symbol that matches query (bare module name query
          # matches default symbol on resolve context or if onlydefaults filter
          # is applied)
@@ -2858,10 +2795,9 @@ proc getModules {dir {mod {}} {fetch_mtime 0} {search {}} {filter {}}} {
             }
             # transform forbidden module in error entry if it specifically
             # matches search query
-            if {$hidlvl == 2 && $hidmatch && [isModuleTagged $elt forbidden 0\
-               $dir/$elt]} {
-               set found_list($elt) [list accesserr [getForbiddenMsg $elt\
-                  $dir/$elt]]
+            if {$hidlvl == 2 && $hidmatch && [isModuleTagged $elt\
+               forbidden]} {
+               set found_list($elt) [list accesserr [getForbiddenMsg $elt]]
                set err_list($elt) 1
             } else {
                unset found_list($elt)
@@ -3027,8 +2963,6 @@ proc getModules {dir {mod {}} {fetch_mtime 0} {search {}} {filter {}}} {
                   # record target in dir struct if part of found elts or if
                   # hidden but should not be in error
                   set pardir [file dirname $tgt]
-                  # do not test if full path module is hidden as full path
-                  # designation cannot be computed (target not in found_list)
                   if {([info exists found_list($tgt)] || ($pardir ne {.} &&\
                      ![info exists found_list($pardir)] && [isModuleHidden\
                      $tgt $mod])) && ![info exists err_list($tgt)]} {
@@ -3151,10 +3085,7 @@ proc getModules {dir {mod {}} {fetch_mtime 0} {search {}} {filter {}}} {
 
    # Phase #6: consolidate tags set for retained modules
 
-   # skip collecting tags if already performed for this modulepath or command
-   # is different than avail
-   if {[currentState commandname] eq {avail} && $dir ni [getState\
-      tags_collected_in]} {
+   if {[currentState commandname] eq {avail}} {
       # load tags from loaded modules in the global structure prior collecting
       # tags found during this getModules evaluation
       cacheCurrentModules 0

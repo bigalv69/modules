@@ -1,1 +1,1 @@
-../../1.1/1/README.txt
+This directory has symlinks for flavours

@@ -1,1 +1,8 @@
-../../../../../modulerc4/foo/2.4/intel/2019/intelmpi
+#%Module
+# Dummy modulefile for foo
+
+set version 2.4
+set compilerTag intel/2019
+set mpiTag intelmpi
+set moduledir [file dirname $ModulesCurrentModulefile]
+source $moduledir/../../../common

@@ -907,15 +907,6 @@ The following module sub-commands appeared on Modules 5.
  * :ref:`Extra specifier` is accepted in search query to query content of
    modulefiles.
 
- Starting Modules 5.4:
-
- * ``tag`` :ref:`extra specifier` is introduced.
- * set multiple values on extra specifier, each of them separated by comma
-   character, to get modules matching any of these values (*OR* operator).
- * set multiple values on variant specification, each of them separated by
-   comma character, to get modules providing any of these variant values (*OR*
-   operator).
-
 Environment
 """""""""""
 
@@ -947,9 +938,6 @@ The following environment variables appeared on Modules 5.
 |            | :envvar:`MODULES_CACHE_EXPIRY_SECS`                             |
 |            | :envvar:`MODULES_IGNORE_USER_RC`                                |
 +------------+-----------------------------------------------------------------+
-| 5.4        | :envvar:`MODULES_STICKY_PURGE`,                                 |
-|            | :envvar:`MODULES_UNIQUE_NAME_LOADED`                            |
-+------------+-----------------------------------------------------------------+
 
 Modules Specific Tcl Commands
 """""""""""""""""""""""""""""
@@ -966,8 +954,6 @@ The following modulefile Tcl commands appeared on Modules 5.
 |            | :mfcmd:`prereq-all`, :mfcmd:`always-load`,                      |
 |            | :mfcmd:`module load-any<module>`, :mfcmd:`family`,              |
 |            | :mfcmd:`complete`, :mfcmd:`uncomplete`, :mfcmd:`pushenv`        |
-+------------+-----------------------------------------------------------------+
-| 5.4        | :mfcmd:`modulepath-label`                                       |
 +------------+-----------------------------------------------------------------+
 
 :mfcmd:`system`, :mfcmd:`is-used`
@@ -1043,11 +1029,6 @@ The following modulefile Tcl commands appeared on Modules 5.
  Starting version 5.1, the ``--return-value`` option is added to return
  variant value or its fallback when modulefile is evaluated in *display* mode.
 
-:mfcmd:`module-tag`, :mfcmd:`module-hide`, :mfcmd:`module-forbid`
-
- Starting version 5.4, module can be specified with its full path file name
- to precisely target one modulefile.
-
 Modules Variables
 """""""""""""""""
 
@@ -1081,8 +1062,6 @@ The following Modules configuration option has been introduced on Modules 5.
 | 5.3        | :mconfig:`ignore_cache`, :mconfig:`cache_buffer_bytes`,         |
 |            | :mconfig:`cache_expiry_secs`, :mconfig:`ignore_user_rc`         |
 +------------+-----------------------------------------------------------------+
-| 5.4        | :mconfig:`sticky_purge`, :mconfig:`unique_name_loaded`          |
-+------------+-----------------------------------------------------------------+
 
 :mconfig:`avail_output`, :mconfig:`avail_terse_output`
 
@@ -1100,24 +1079,10 @@ The following Modules configuration option has been introduced on Modules 5.
  Starting version 5.3.1, element ``indesym`` is added to the list of accepted
  values.
 
-:mconfig:`list_output`, :mconfig:`list_terse_output`
+:mconfig:`list_output`, :mconfig:`list_terse_output`, :mconfig:`colors`,
+:mconfig:`protected_envvars`, :mconfig:`shells_with_ksh_fpath`,
+:mconfig:`tag_abbrev`, :mconfig:`tag_color_name`, :mconfig:`variant_shortcut`
 
  Starting Modules 5.3, these configuration options accept value prefixed by
  ``+`` or ``-`` which means value should respectively be appended to or
  subtracted from current configuration option value.
-
- Starting version 5.4, elements ``alias`` and ``indesym`` are added to the
- list of accepted values.
-
-:mconfig:`colors`, :mconfig:`protected_envvars`,
-:mconfig:`shells_with_ksh_fpath`, :mconfig:`tag_abbrev`,
-:mconfig:`tag_color_name`, :mconfig:`variant_shortcut`
-
- Starting Modules 5.3, these configuration options accept value prefixed by
- ``+`` or ``-`` which means value should respectively be appended to or
- subtracted from current configuration option value.
-
-:mconfig:`rcfile`
-
- Starting Modules 5.4, this configuration option accepts more than one global
- rc file location. A colon character separates each of these locations.

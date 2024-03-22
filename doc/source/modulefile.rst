@@ -496,16 +496,11 @@ the *modulefile* is being loaded.
  :ref:`Module tags` section in :ref:`module(1)`.
 
  The parameter *modulefile* may leverage a specific syntax to finely select
- module version (see `Advanced module version specifiers`_ section below). It
- may also be a full path file name to precisely designate one module in a
- specific modulepath.
+ module version (see `Advanced module version specifiers`_ section below).
 
  .. only:: html
 
     .. versionadded:: 4.6
-
-    .. versionchanged:: 5.4
-       Full path file name may be used to designate *modulefile*
 
 .. mfcmd:: module-hide [options] modulefile...
 
@@ -584,8 +579,6 @@ the *modulefile* is being loaded.
  The parameter *modulefile* may also be a symbolic modulefile name or a
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
- Moreover it may also be a full path file name to precisely designate one
- module in a specific modulepath.
 
  .. only:: html
 
@@ -593,9 +586,6 @@ the *modulefile* is being loaded.
 
     .. versionchanged:: 4.7
        Option ``--hidden-loaded`` added.
-
-    .. versionchanged:: 5.4
-       Full path file name may be used to designate *modulefile*
 
 .. mfcmd:: module-info option [info-args]
 
@@ -783,8 +773,6 @@ the *modulefile* is being loaded.
  The parameter *modulefile* may also be a symbolic modulefile name or a
  modulefile alias. It may also leverage a specific syntax to finely select
  module version (see `Advanced module version specifiers`_ section below).
- Moreover it may also be a full path file name to precisely designate one
- module in a specific modulepath.
 
  Tags inherited from other modulefile commands or module states cannot be set
  with :mfcmd:`module-tag`. Otherwise an error is returned. Those special tags
@@ -804,9 +792,6 @@ the *modulefile* is being loaded.
 
     .. versionchanged:: 5.1
        Tag ``keep-loaded`` added
-
-    .. versionchanged:: 5.4
-       Full path file name may be used to designate *modulefile*
 
 .. mfcmd:: module-version modulefile version-name...
 
@@ -856,19 +841,6 @@ the *modulefile* is being loaded.
  The *string* parameter has to be enclosed in double-quotes if there's more
  than one word specified. Words are defined to be separated by whitespace
  characters (space, tab, cr).
-
-.. mfcmd:: modulepath-label directory label
-
- Assigns *label* string to modulepath *directory*. This *label* is used on
- :subcmd:`avail` output to refer to the modulepath.
-
- The parameter *directory* corresponds to a fully or partially qualified
- modulepath. If *directory* is ``.`` (dot) then the current directory of the
- modulerc file defining this command is assumed.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. mfcmd:: prepend-path [-d C|--delim C|--delim=C] [--duplicates] variable value...
 
@@ -1357,8 +1329,7 @@ for each interpretation context.
 | and standard Tcl commands | :mfcmd:`module-alias`, :mfcmd:`module-forbid`, |
 |                           | :mfcmd:`module-hide`, :mfcmd:`module-info`,    |
 |                           | :mfcmd:`module-tag`, :mfcmd:`module-version`,  |
-|                           | :mfcmd:`module-virtual`,                       |
-|                           | :mfcmd:`modulepath-label`, :mfcmd:`system`,    |
+|                           | :mfcmd:`module-virtual`, :mfcmd:`system`,      |
 |                           | :mfcmd:`uname`, :mfcmd:`versioncmp` and        |
 |                           | standard Tcl commands                          |
 +---------------------------+------------------------------------------------+

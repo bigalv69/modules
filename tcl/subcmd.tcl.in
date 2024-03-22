@@ -38,54 +38,16 @@ proc cmdModuleList {show_oneperline show_mtime search_match args} {
       set loadedmsg {Currently Loaded Modulefiles}
    }
 
-   set report_indesym [isEltInReport indesym 0]
-   set report_alias [isEltInReport alias 0]
-
-   # build list of loaded modules and symbolics and aliases if reported
-   set loadedmodlist [list]
-   foreach mod [getLoadedModulePropertyList name] {
-      set modfile [getModulefileFromLoadedModule $mod]
-      set mtime [expr {$show_mtime && [file exists $modfile] ?\
-         [getFileMtime $modfile] : {}}]
-      set mod_list($mod) [list modulefile $mtime $modfile]
-
-      # fetch symbols from loaded environment information
-      set modname [file dirname $mod]
-      set sym_list {}
-      foreach altname [getLoadedAltname $mod 0 sym] {
-         # skip non-symbol entry
-         if {$altname ne $modname} {
-            lappend sym_list [file tail $altname]
-            # fill loaded list structure with symbolic versions in case
-            # indesym report is activated
-            if {$report_indesym} {
-               set mod_list($altname) [list version $mod]
-               lappend loadedmodlist $altname
-            }
-         }
-      }
-      set ::g_symbolHash($mod) [lsort -dictionary $sym_list]
-
-      # fetch aliases from loaded environment information
-      if {$report_alias} {
-         foreach altname [getLoadedAltname $mod 0 alias] {
-            set mod_list($altname) [list alias $mod]
-            lappend loadedmodlist $altname
-         }
-      }
-
-      lappend loadedmodlist $mod
-   }
-
    # filter-out hidden loaded modules unless all module should be seen
-   if {[getState hiding_threshold] <= 1} {
-      set newloadedmodlist [list]
-      foreach mod $loadedmodlist {
+   if {[getState hiding_threshold] > 1} {
+      set loadedmodlist [getLoadedModulePropertyList name]
+   } else {
+      set loadedmodlist [list]
+      foreach mod [getLoadedModulePropertyList name] {
          if {![isModuleTagged $mod hidden-loaded 1]} {
-            lappend newloadedmodlist $mod
+            lappend loadedmodlist $mod
          }
       }
-      set loadedmodlist $newloadedmodlist
    }
 
    # same header msg if no module loaded at all whether search is made or not
@@ -94,20 +56,12 @@ proc cmdModuleList {show_oneperline show_mtime search_match args} {
 
    # filter loaded modules not matching any of the mod spec passed
    if {[llength $args] > 0} {
-      # include alt name comparison (alias/sym) when checking module name
-      # depends if alias and/or sym are reported independently
-      set modeq_altname_mode [switch -- $report_indesym$report_alias {
-         11 {expr {0}}
-         10 {expr {7}}
-         01 {expr {6}}
-         00 {expr {2}}
-      }]
       set matchlist [list]
       foreach mod $loadedmodlist {
          foreach pattern $args {
             # compare pattern against loaded module, its variant set and its
             # alternative names
-            if {[modEq $pattern $mod $mtest 1 $modeq_altname_mode 1 0 *]} {
+            if {[modEq $pattern $mod $mtest 1 2 1 0 *]} {
                lappend matchlist $mod
                break
             }
@@ -121,6 +75,25 @@ proc cmdModuleList {show_oneperline show_mtime search_match args} {
          report $noloadedmsg
       }
    } else {
+      # build mod_list array with loaded modules
+      foreach mod $loadedmodlist {
+         set modfile [getModulefileFromLoadedModule $mod]
+         set mtime [expr {$show_mtime && [file exists $modfile] ?\
+            [getFileMtime $modfile] : {}}]
+         set mod_list($mod) [list modulefile $mtime $modfile]
+
+         # fetch symbols from loaded environment information
+         set modname [file dirname $mod]
+         set sym_list {}
+         foreach altname [getLoadedAltname $mod 0 sym] {
+            # skip non-symbol entry
+            if {$altname ne $modname} {
+               lappend sym_list [file tail $altname]
+            }
+         }
+         set ::g_symbolHash($mod) [lsort -dictionary $sym_list]
+      }
+
       set one_per_line [expr {$show_mtime || $show_oneperline}]
       set show_idx [expr {!$show_mtime && [isEltInReport idx]}]
       set header [expr {!$json && [isEltInReport header] ? $loadedmsg :\
@@ -255,11 +228,11 @@ proc cmdModuleSearch {{mod {}} {search {}}} {
       foreach elt [array names mod_list] {
          switch -- [lindex $mod_list($elt) 0] {
             modulefile {
-               if {[isModuleTagged $elt forbidden 0 $dir/$elt]} {
+               if {[isModuleTagged $elt forbidden]} {
                   # register any error occurring on element matching search
                   if {[modEq $mod $elt]} {
                      set err_list($elt) [list accesserr [getForbiddenMsg\
-                        $elt $dir/$elt]]
+                        $elt]]
                   }
                } else {
                   set interp_list($elt) $dir/$elt
@@ -269,12 +242,11 @@ proc cmdModuleSearch {{mod {}} {search {}}} {
                }
             }
             virtual {
-               if {[isModuleTagged $elt forbidden 0 [lindex $mod_list($elt)\
-                  2]]} {
+               if {[isModuleTagged $elt forbidden]} {
                   # register any error occurring on element matching search
                   if {[modEq $mod $elt]} {
                      set err_list($elt) [list accesserr [getForbiddenMsg\
-                        $elt [lindex $mod_list($elt) 2]]]
+                        $elt]]
                   }
                } else {
                   set interp_list($elt) [lindex $mod_list($elt) 2]
@@ -1307,7 +1279,7 @@ proc cmdModuleLoad {context uasked tryload loadany tag_list args} {
          }
 
          # loading visibility depends on hidden-loaded tag
-         set hidden [isModuleTagged $modnamevr hidden-loaded 1 $modfile]
+         set hidden [isModuleTagged $modnamevr hidden-loaded 1]
 
          append-path LOADEDMODULES $modname
          # allow duplicate modfile entries for virtual modules
@@ -1342,7 +1314,7 @@ proc cmdModuleLoad {context uasked tryload loadany tag_list args} {
          }
 
          # declare the tags of this module
-         if {[set modtag [getExportTagList $modnamevr 1 $modfile]] ne {}} {
+         if {[set modtag [getExportTagList $modnamevr 1]] ne {}} {
             append-path __MODULES_LMTAG $modtag
          }
          if {[set modtag [getExtraTagList $modnamevr 1]] ne {}} {
@@ -1366,7 +1338,7 @@ proc cmdModuleLoad {context uasked tryload loadany tag_list args} {
 
          # record module title (name, variants and tags)
          registerModuleDesignation $msgrecid $modname [getVariantList\
-            $modname 7] [getExportTagList $modname 0 $modfile]
+            $modname 7] [getExportTagList $modname]
 
          # consider evaluation hidden if hidden loaded module is auto loaded
          # and no specific messages are recorded for this evaluation
@@ -1949,9 +1921,8 @@ proc cmdModuleAvail {show_oneperline show_mtime show_filter search_filter\
             # err is raised from a modulerc)
             array set mod_list [getModules $dir $mod $show_mtime\
                $search_filter $show_filter]
-            set modpath_label [getModulepathLabel $dir]
-            reportModules $search_queries $modpath_label mp $hstyle\
-               $show_mtime 0 $one_per_line $theader_cols hidden-loaded
+            reportModules $search_queries $dir mp $hstyle $show_mtime 0\
+               $one_per_line $theader_cols hidden-loaded
          } else {
             # add result if not already added from an upper priority modpath
             foreach {elt props} [getModules $dir $mod $show_mtime\

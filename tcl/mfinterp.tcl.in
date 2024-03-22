@@ -89,19 +89,19 @@ proc initModfileModeAliases {mode auto aliasesVN aliasesPassArgVN\
    if {![info exists g_modfilePerModeAliases]} {
       set ::g_modfileBaseAliases [list versioncmp versioncmp getenv getenv\
          getvariant getvariant is-loaded is-loaded is-saved is-saved is-used\
-         is-used is-avail is-avail uname uname module-info module-info\
-         modulepath-label modulepath-label exit exitModfileCmd reportCmdTrace\
-         reportCmdTrace reportInternalBug reportInternalBug reportWarning\
-         reportWarning reportError reportError raiseErrorCount\
-         raiseErrorCount report report isVerbosityLevel isVerbosityLevel\
-         isWin initStateIsWin puts putsModfileCmd readModuleContent\
-         readModuleContent formatErrStackTrace formatErrStackTrace]
+         is-used is-avail is-avail uname uname module-info module-info exit\
+         exitModfileCmd reportCmdTrace reportCmdTrace reportInternalBug\
+         reportInternalBug reportWarning reportWarning reportError\
+         reportError raiseErrorCount raiseErrorCount report report\
+         isVerbosityLevel isVerbosityLevel isWin initStateIsWin puts\
+         putsModfileCmd readModuleContent readModuleContent\
+         formatErrStackTrace formatErrStackTrace]
 
       # list of alias commands whose target procedure is adapted according to
       # the evaluation mode
       set ::g_modfileEvalModes {load unload display help test whatis refresh\
          scan}
-      ##nagelfar ignore #42 Too long line
+      ##nagelfar ignore #41 Too long line
       array set g_modfilePerModeAliases {
 add-property   {nop            nop            nop            nop            nop            nop            nop          nop         }
 always-load    {always-load    nop            reportCmd      nop            nop            nop            nop          always-load-sc}
@@ -137,7 +137,6 @@ set-function   {set-function   set-function-un reportCmd     nop            nop 
 setenv         {setenv         setenv-un      setenv         setenv         setenv         setenv-wh      nop          setenv-sc   }
 source-sh      {source-sh      source-sh-un   source-sh-di   nop            nop            nop            source-sh    source-sh   }
 system         {system         system         reportCmd      nop            nop            nop            nop          nop         }
-unique-name-conflict {unique-name-conflict nop nop           nop            nop            nop            nop          nop         }
 uncomplete     {uncomplete     nop            reportCmd      nop            nop            nop            nop          uncomplete-sc}
 unset-alias    {unset-alias    nop            reportCmd      nop            nop            nop            nop          unset-alias-sc}
 unset-function {unset-function nop            reportCmd      nop            nop            nop            nop          unset-function-sc}
@@ -175,56 +174,11 @@ x-resource     {x-resource     x-resource     reportCmd      nop            nop 
          depends-on}} {
          set aliasesPassArg($alias) [list 0 $auto]
       # associate a trace command if per-mode alias command is not reportCmd
-      # in display mode (except for source-sh and unique-name-conflict)
-      } elseif {$mode eq {display} && $alias ni {source-sh\
-         unique-name-conflict}} {
+      # in display mode (except for source-sh)
+      } elseif {$mode eq {display} && $alias ne {source-sh}} {
          set traces($alias) reportCmdTrace
       }
    }
-}
-
-# Fail unload attempt if module is sticky, unless if forced or reloading
-# Also fail unload if mod is super-sticky even if forced, unless reloading
-proc skipUnloadIfSticky {mode modname modfile} {
-   if {$mode ne {unload}} {
-      return 0
-   }
-
-   # when loaded, tags applies to mod name and version (not with variant)
-   set is_supersticky_not_reloading [expr {[isModuleTagged $modname\
-      super-sticky 1 $modfile] && [currentState reloading_supersticky] ne\
-      $modname}]
-   set is_sticky_not_reloading [expr {[isModuleTagged $modname sticky 1\
-      $modfile] && [currentState reloading_sticky] ne $modname &&\
-      [currentState unloading_sticky] ne $modname}]
-   set sticky_purge [expr {[getState commandname] eq {purge} ? [getConf\
-      sticky_purge] : {}}]
-
-   if {!$is_supersticky_not_reloading && $is_sticky_not_reloading &&\
-      [getState force]} {
-      reportWarning [getStickyForcedUnloadMsg]
-   } elseif {$is_supersticky_not_reloading || $is_sticky_not_reloading} {
-      # restore changed states prior raising error
-      lpopState debug_msg_prefix
-      lpopState modulepath
-      lpopState specifiedname
-      lpopState modulename
-      lpopState modulenamevr
-      lpopState modulefile
-
-      set msg [getStickyUnloadMsg [expr {$is_supersticky_not_reloading ?\
-         {super-sticky} : {sticky}}]]
-      # no message if sticky_purge is set to silent
-      switch -- $sticky_purge {
-         error - {} {knerror $msg}
-         warning {reportWarning $msg}
-      }
-
-      # skip unload without raised error
-      return 1
-   }
-
-   return 0
 }
 
 proc execute-modulefile {modfile modname modnamevrvar modspec {up_namevr 1}\
@@ -260,16 +214,39 @@ proc execute-modulefile {modfile modname modnamevrvar modspec {up_namevr 1}\
    }
 
    # inform that access to module will be soon denied
-   if {$mode ne {unload} && [isModuleTagged $modnamevr nearly-forbidden 1\
-      $modfile]} {
-      reportWarning [getNearlyForbiddenMsg $modnamevr $modfile]
+   if {$mode ne {unload} && [isModuleTagged $modnamevr nearly-forbidden 1]} {
+      reportWarning [getNearlyForbiddenMsg $modnamevr]
       set nearlyforbidwarn 1
-   }
-
-   # fail unload when sticky
-   if {[skipUnloadIfSticky $mode $modname $modfile]} {
-      # skip end of unload upper level process when no error raised
-      return -code continue 0
+   # fail unload attempt if module is sticky, unless if forced or reloading
+   # also fail unload if mod is super-sticky even if forced, unless reloading
+   } elseif {$mode eq {unload}} {
+      # when loaded, tags applies to mod name and version (not with variant)
+      if {[isModuleTagged $modname super-sticky 1] && [currentState\
+         reloading_supersticky] ne $modname} {
+         # restore changed states prior raising error
+         lpopState debug_msg_prefix
+         lpopState modulepath
+         lpopState specifiedname
+         lpopState modulename
+         lpopState modulenamevr
+         lpopState modulefile
+         knerror [getStickyUnloadMsg super-sticky]
+      } elseif {[isModuleTagged $modname sticky 1] && [currentState\
+         reloading_sticky] ne $modname && [currentState unloading_sticky] ne\
+         $modname} {
+         if {[getState force]} {
+            reportWarning [getStickyForcedUnloadMsg]
+         } else {
+            # restore changed states prior raising error
+            lpopState debug_msg_prefix
+            lpopState modulepath
+            lpopState specifiedname
+            lpopState modulename
+            lpopState modulenamevr
+            lpopState modulefile
+            knerror [getStickyUnloadMsg]
+         }
+      }
    }
 
    if {![info exists ::g_modfileUntrackVars]} {
@@ -363,10 +340,6 @@ proc execute-modulefile {modfile modname modnamevrvar modspec {up_namevr 1}\
       info script $::ModulesCurrentModulefile
       # eval then call for specific proc depending mode under same catch
       set sourceFailed [catch {
-         # raise conflict error if one name of currently loading module is
-         # shared by an already loaded module
-         unique-name-conflict
-
          eval $modcontent
 
          # raise error if a variant specified is not defined in modulefile
@@ -468,7 +441,7 @@ proc execute-modulefile {modfile modname modnamevrvar modspec {up_namevr 1}\
          append newmodnamevr " $vr"
       }
       if {$modnamevr ne $newmodnamevr} {
-         set modnamevr_tag_list [getTagList $modnamevr $modfile]
+         set modnamevr_tag_list [getTagList $modnamevr]
          set modnamevr_extratag_list [getExtraTagList $modnamevr]
          lassign [parseModuleSpecification 0 0 0 0 {*}$newmodnamevr] modnamevr
          # $up_namevr is only enabled when $fetch_tags is also enabled
@@ -482,12 +455,12 @@ proc execute-modulefile {modfile modname modnamevrvar modspec {up_namevr 1}\
 
    # check if special tags now applies and require to raise an error
    if {$mode ne {unload}} {
-      if {[isModuleTagged $modnamevr forbidden 1 $modfile]} {
+      if {[isModuleTagged $modnamevr forbidden 1]} {
          set errorVal 1
-         reportError [getForbiddenMsg $modnamevr $modfile]
+         reportError [getForbiddenMsg $modnamevr]
       } elseif {![info exists nearlyforbidwarn] && [isModuleTagged $modnamevr\
-         nearly-forbidden 1 $modfile]} {
-         reportWarning [getNearlyForbiddenMsg $modnamevr $modfile]
+         nearly-forbidden 1]} {
+         reportWarning [getNearlyForbiddenMsg $modnamevr]
       }
    }
 
@@ -525,10 +498,10 @@ proc execute-modulerc {modfile modname modspec} {
          versioncmp is-loaded is-loaded is-used is-used module-version\
          module-version module-alias module-alias module-virtual\
          module-virtual module-forbid module-forbid module-hide module-hide\
-         module-tag module-tag module-info module-info modulepath-label\
-         modulepath-label reportInternalBug reportInternalBug\
-         setModulesVersion setModulesVersion readModuleContent\
-         readModuleContent formatErrStackTrace formatErrStackTrace]
+         module-tag module-tag module-info module-info\
+         reportInternalBug reportInternalBug setModulesVersion\
+         setModulesVersion readModuleContent readModuleContent\
+         formatErrStackTrace formatErrStackTrace]
 
       # add site-specific command aliases for modulerc interp
       if {[info exists ::modulerc_extra_cmds]} {
@@ -931,10 +904,9 @@ proc module-info {what {more {}}} {
          collectModuleTags $modnamevr
 
          if {$more ne {}} {
-            return [expr {$more in [getTagList $modnamevr [currentState\
-               modulefile]]}]
+            return [expr {$more in [getTagList $modnamevr]}]
          } else {
-            return [getTagList $modnamevr [currentState modulefile]]
+            return [getTagList $modnamevr]
          }
       }
       version {
@@ -1123,46 +1095,29 @@ proc setModspecTag {modspec tag {props {}}} {
    reportDebug "Set tag '$tag' with properties '$props' on module\
       specification '$modspec'"
 
-   if {[isModuleFullPath $modspec]} {
-      # use dedicated structure for full path module specifications
-      if {![info exists ::g_moduleTagFullPath($modspec)] || $tag ni\
-         $::g_moduleTagFullPath($modspec)} {
-            lappend ::g_moduleTagFullPath($modspec) $tag
-      } else {
-         set idx [lsearch -exact $::g_moduleTagFullPath($modspec) $tag]
-      }
-      # record props associated to tag
-      if {[info exists idx]} {
-         lset ::g_moduleTagFullPathSpec($modspec) $idx $props
-      } else {
-         lappend ::g_moduleTagFullPathSpec($modspec) $props
-      }
+   # record tag list for mod root to optimize search
+   set modroot [getModuleRootFromVersSpec $modspec]
+   if {![info exists ::g_moduleTagRoot($modroot)]} {
+      lappend ::g_moduleTagRoot($modroot) $tag
+      set idx 0
+      set new 1
    } else {
-      # record tag list for mod root to optimize search
-      set modroot [getModuleRootFromVersSpec $modspec]
-      if {![info exists ::g_moduleTagRoot($modroot)]} {
+      set idx [lsearch -exact $::g_moduleTagRoot($modroot) $tag]
+      if {$idx == -1} {
+         set idx [llength $::g_moduleTagRoot($modroot)]
          lappend ::g_moduleTagRoot($modroot) $tag
-         set idx 0
          set new 1
-      } else {
-         set idx [lsearch -exact $::g_moduleTagRoot($modroot) $tag]
-         if {$idx == -1} {
-            set idx [llength $::g_moduleTagRoot($modroot)]
-            lappend ::g_moduleTagRoot($modroot) $tag
-            set new 1
-         }
       }
+   }
 
-      # then record mod spec and props at idx defined for tag. new spec are
-      # appended and firstly matching spec is returned with its props on
-      # search
-      if {[info exists new]} {
-         lappend ::g_moduleTagRootSpec($modroot) [list $modspec $props]
-      } else {
-         set tagrootlist [lindex $::g_moduleTagRootSpec($modroot) $idx]
-         lappend tagrootlist $modspec $props
-         lset ::g_moduleTagRootSpec($modroot) $idx $tagrootlist
-      }
+   # then record mod spec and props at idx defined for tag. new spec are
+   # appended and firstly matching spec is returned with its props on search
+   if {[info exists new]} {
+      lappend ::g_moduleTagRootSpec($modroot) [list $modspec $props]
+   } else {
+      set tagrootlist [lindex $::g_moduleTagRootSpec($modroot) $idx]
+      lappend tagrootlist $modspec $props
+      lset ::g_moduleTagRootSpec($modroot) $idx $tagrootlist
    }
 }
 
@@ -2650,7 +2605,7 @@ proc variant {itrp args} {
 
    # search for variant specification (most right-positionned value wins)
    for {set i [expr {[llength $vrlist]-1}]} {$i >= 0} {incr i -1} {
-      lassign [lindex $vrlist $i] vrname vrisbool vrvalue
+      lassign [lindex $vrlist $i] vrname vrvalue
       if {$vrname eq $name} {
          # translate value in boolean canonical form (0/1) if variant is bool
          if {$isboolean && [string is boolean -strict $vrvalue]} {
@@ -2895,30 +2850,6 @@ proc pushenv-wh {var val} {
       set ::env($var) {}
    }
    return {}
-}
-
-proc modulepath-label {modpath label} {
-   set modpath [getAbsolutePath $modpath]
-   set ::g_modulepathLabel($modpath) $label
-   reportDebug "modpath=$modpath, label='$label'"
-}
-
-proc unique-name-conflict {} {
-   # skip if unique_name_loaded configuration is disabled
-   if {![getConf unique_name_loaded]} {
-      return
-   }
-
-   # get root name of all names (actual and alternatives) of currently
-   # evaluating module
-   set root_name_list [list]
-   set mod [currentState modulename]
-   foreach name [list $mod {*}[getAllModuleResolvedName $mod]] {
-      appendNoDupToList root_name_list [lindex [file split $name] 0]
-   }
-
-   # declare conflict over all these names
-   conflict {*}$root_name_list
 }
 
 # ;;; Local Variables: ***

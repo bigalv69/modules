@@ -1,1 +1,7 @@
-../../4.0/pgi/19.4
+#%Module
+# Dummy modulefile for openmpi
+
+set version 4.0
+set compilerTag pgi/19.4
+set moduledir [file dirname $ModulesCurrentModulefile]
+source $moduledir/../../common

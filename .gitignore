@@ -22,7 +22,7 @@
 /tcl/envmngt.tcl
 /tcl/init.tcl
 /tcl/main.tcl
-/tcl/mfinterp.tcl
+/tcl/interp.tcl
 /tcl/modfind.tcl
 /tcl/report.tcl
 /tcl/subcmd.tcl
@@ -34,6 +34,7 @@
 /tcl/GRTAGS
 /tcl/GPATH
 /tcl/gtags.file
+/tcl/syntaxdb.tcl
 /modulecmd-test.tcl
 /modulecmd-test.tcl_i
 /coverage
@@ -62,3 +63,5 @@
 # ignore vim swap files
 *.swp
 *.swo
+
+.fake

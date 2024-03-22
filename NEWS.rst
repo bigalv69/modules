@@ -6,45 +6,6 @@ Release notes
 This file describes changes in recent versions of Modules. It primarily
 documents those changes that are of interest to users and admins.
 
-.. _5.4 release notes:
-
-Modules 5.4.0 (not yet released)
---------------------------------
-
-* Allow to designate module by its full path file name on :mfcmd:`module-tag`,
-  :mfcmd:`module-hide` and :mfcmd:`module-forbid`. (fix issue #485)
-* Introduce ``tag`` extra specifier to search modules on :subcmd:`avail`,
-  :subcmd:`whatis` and :subcmd:`paths` sub-commands based on tags applied.
-  Tag abbreviation may also be used as extra specifier name.
-* Add ability to specify multiple names on one extra specifier criterion to
-  select modules matching any of these names (e.g.,
-  ``env:PATH,LD_LIBRARY_PATH``)
-* Add ability to specify multiple values on one variant criterion to select
-  modules providing any of these variant values (e.g., ``foo=val1,val2``)
-* Add the ``indesym`` element in the allowed value list of the
-  :mconfig:`list_output` and :mconfig:`list_terse_output` configuration
-  options. When set, symbolic versions are reported as independent elements
-  rather along the loaded module they are attached to.
-* Add the ``alias`` element in the allowed value list of the
-  :mconfig:`list_output` and :mconfig:`list_terse_output` configuration
-  options. When set, module aliases targeting loaded modules are reported.
-* Introduce :mconfig:`sticky_purge` configuration option to define behavior
-  when unloading sticky or super-sticky module during a :subcmd:`purge`
-  command. Raise an ``error`` (default) or emit a ``warning`` or be
-  ``silent``. When set, it defines the :envvar:`MODULES_STICKY_PURGE`
-  environment variable. Default value can be changed with
-  :instopt:`--with-sticky-purge` installation option. (fix issue #502)
-* Introduce :mfcmd:`modulepath-label` modulerc command, which defines label
-  used instead of modulepath directory path in :subcmd:`avail` output.
-* More than one global rc file can now be specified in :envvar:`MODULERCFILE`
-  or via :mconfig:`rcfile` configuration option.
-* Add the :mconfig:`unique_name_loaded` configuration option to allow, when
-  enabled, only one module loaded per module name. When set, it defines the
-  :envvar:`MODULES_UNIQUE_NAME_LOADED` environment variable. Default value
-  (disabled) can be changed with :instopt:`--enable-unique-name-loaded`
-  installation option.
-
-
 .. _5.3 release notes:
 
 Modules 5.3.1 (2023-06-27)

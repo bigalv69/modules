@@ -95,9 +95,9 @@ array set g_config_defs [list\
    implicit_requirement {MODULES_IMPLICIT_REQUIREMENT @implicitrequirement@ 0\
       b {0 1}}\
    list_output {MODULES_LIST_OUTPUT {@listoutput@} 0 l {header idx variant\
-      alias indesym sym tag key} {} {} eltlist}\
+      sym tag key} {} {} eltlist}\
    list_terse_output {MODULES_LIST_TERSE_OUTPUT {@listterseoutput@} 0 l\
-      {header idx variant alias indesym sym tag key} {} {} eltlist}\
+      {header idx variant sym tag key} {} {} eltlist}\
    locked_configs {{} {@lockedconfigs@} 0 o}\
    mcookie_check {MODULES_MCOOKIE_CHECK always 0 s {eval always}}\
    mcookie_version_check {MODULES_MCOOKIE_VERSION_CHECK\
@@ -107,7 +107,7 @@ array set g_config_defs [list\
       0 i {0 365} {} {} intbe}\
    pager {MODULES_PAGER {@pagercmd@} 0 s}\
    protected_envvars {MODULES_PROTECTED_ENVVARS <undef> 0 l}\
-   rcfile {MODULERCFILE <undef> 0 l}\
+   rcfile {MODULERCFILE <undef> 0 s}\
    redirect_output {MODULES_REDIRECT_OUTPUT 1 0 b {0 1}}\
    reset_target_state {MODULES_RESET_TARGET_STATE __init__ 0 s}\
    quarantine_support {MODULES_QUARANTINE_SUPPORT @quarantinesupport@ 0 b {0\
@@ -118,8 +118,6 @@ array set g_config_defs [list\
    silent_shell_debug {MODULES_SILENT_SHELL_DEBUG @silentshdbgsupport@ 0 b {0\
       1}}\
    siteconfig {{} {@etcdir@/siteconfig.tcl} 0 s}\
-   sticky_purge {MODULES_STICKY_PURGE {@stickypurge@} 0 s {error warning\
-      silent}}\
    tag_abbrev {MODULES_TAG_ABBREV {@tagabbrev@} 0 l {} {} initConfTagAbbrev}\
    tag_color_name {MODULES_TAG_COLOR_NAME {@tagcolorname@} 0 l {} {}\
       initConfTagColorName}\
@@ -127,8 +125,6 @@ array set g_config_defs [list\
    tcl_linter {MODULES_TCL_LINTER {@tcllintercmd@} 0 s}\
    term_background {MODULES_TERM_BACKGROUND @termbg@ 0 s {dark light}}\
    term_width {MODULES_TERM_WIDTH 0 0 i {0 1000} {} {} intbe}\
-   unique_name_loaded {MODULES_UNIQUE_NAME_LOADED @uniquenameloaded@ 0 b {0\
-      1}}\
    unload_match_order {MODULES_UNLOAD_MATCH_ORDER @unloadmatchorder@ 0 s\
       {returnlast returnfirst}}\
    implicit_default {MODULES_IMPLICIT_DEFAULT @implicitdefault@ 1 b {0 1}}\

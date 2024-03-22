@@ -253,7 +253,7 @@ achieve a specific setup, some additional steps may be required:
 6. Prior running the module sub-command specified as argument, the
    :file:`modulecmd.tcl` script evaluates the global run-command files. These
    files are either the :file:`rc` file in the directory designated by the
-   :instopt:`--etcdir` option, the file(s) designated in the
+   :instopt:`--etcdir` option, the file designated in the
    :envvar:`MODULERCFILE` environment variable or the user-specific RC file
    located in :file:`$HOME/.modulerc`. The RC files are modulefiles (limited
    to a subset of the :ref:`modulefile Tcl
@@ -675,20 +675,6 @@ instance :instopt:`--disable-set-manpath<--enable-set-manpath>`):
  modulefile corresponding to Modules version is added to the shared modulepath
  and enables to switch from one Modules version to another. (default=no)
 
-.. instopt:: --enable-unique-name-loaded
-
- Only allow one module loaded per module name. A conflict is raised when
- loading a module whose name or alternative names are shared by an already
- loaded module. (default=no)
-
- This installation option defines the default value of the
- :mconfig:`unique_name_loaded` configuration option which could be changed
- after installation with the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
-
 .. instopt:: --enable-vim-addons
 
  Install the Vim addon files in the Vim addons directory defined with the
@@ -940,9 +926,9 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
 
  Specify the content to report on list sub-command regular output in addition
  to the loaded module names. Elements accepted in LIST are: ``header``,
- ``idx``, ``variant``, ``alias``, ``indesym``, ``sym``, ``tag`` and ``key``
- (elements in LIST are separated by ``:``). The order of the elements in LIST
- does not matter. (default=\ ``header:idx:variant:sym:tag:key``)
+ ``idx``, ``variant``, ``sym``, ``tag`` and ``key`` (elements in LIST are
+ separated by ``:``). The order of the elements in LIST does not matter.
+ (default=\ ``header:idx:variant:sym:tag:key``)
 
  This installation option defines the default value of the
  :mconfig:`list_output` configuration option which could be changed after
@@ -955,16 +941,13 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
     .. versionchanged:: 4.8
        Element ``variant`` added and set by default
 
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
-
 .. instopt:: --with-list-terse-output=LIST
 
  Specify the content to report on list sub-command terse output in addition
  to the loaded module names. Elements accepted in LIST are: ``header``,
- ``idx``, ``variant``, ``alias``, ``indesym``, ``sym``, ``tag`` and ``key``
- (elements in LIST are separated by ``:``). The order of the elements in LIST
- does not matter. (default=\ ``header``)
+ ``idx``, ``variant``, ``sym``, ``tag`` and ``key`` (elements in LIST are
+ separated by ``:``). The order of the elements in LIST does not matter.
+ (default=\ ``header``)
 
  This installation option defines the default value of the
  :mconfig:`list_terse_output` configuration option which could be changed
@@ -976,9 +959,6 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
 
     .. versionchanged:: 4.8
        Element ``variant`` added
-
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
 
 .. instopt:: --with-loadedmodules=MODLIST
 
@@ -1115,20 +1095,6 @@ instance :instopt:`--without-modulepath<--with-modulepath>`):
  .. only:: html
 
     .. versionadded:: 4.3
-
-.. instopt:: --with-sticky-purge=VALUE
-
- When unloading a sticky or super-sticky module during a module purge, raise
- an ``error`` or emit a ``warning`` message or be ``silent``.
- (default=\ ``error``)
-
- This installation option defines the default value of the
- :mconfig:`sticky_purge` configuration option which could be changed after
- installation with the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. instopt:: --with-tag-abbrev=ABBRVLIST
 
@@ -1422,9 +1388,6 @@ installation.
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`siteconfig`             | |file etcdir_siteconfig|                     | :instopt:`--prefix`, :instopt:`--etcdir`     |              | X         |
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
-| :mconfig:`sticky_purge`           | ``error``                                    | :instopt:`--with-sticky-purge`,              |              |           |
-|                                   |                                              | :envvar:`MODULES_STICKY_PURGE`               |              |           |
-+-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`tag_abbrev`             | auto-loaded=aL:loaded=L:hidden=H:\           | :instopt:`--with-tag-abbrev`,                |              |           |
 |                                   | hidden-loaded=H:forbidden=F:nearly-\         | :envvar:`MODULES_TAG_ABBREV`                 |              |           |
 |                                   | forbidden=nF:sticky=S:super-sticky=sS:\      |                                              |              |           |
@@ -1444,9 +1407,6 @@ installation.
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`term_width`             | ``0``                                        | :envvar:`MODULES_TERM_WIDTH`,                |              |           |
 |                                   |                                              | :option:`--width`                            |              |           |
-+-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
-| :mconfig:`unique_name_loaded`     | ``0``                                        | :instopt:`--enable-unique-name-loaded`,      |              |           |
-|                                   |                                              | :envvar:`MODULES_UNIQUE_NAME_LOADED`         |              |           |
 +-----------------------------------+----------------------------------------------+----------------------------------------------+--------------+-----------+
 | :mconfig:`unload_match_order`     | ``returnlast``                               | :instopt:`--with-unload-match-order`,        |              |           |
 |                                   |                                              | :envvar:`MODULES_UNLOAD_MATCH_ORDER`         |              |           |

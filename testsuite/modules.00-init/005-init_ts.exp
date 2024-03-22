@@ -96,10 +96,8 @@ set err_specmodname "$error_msgs: $msg_nomodnameinarg "
 set err_specvers "$error_msgs: $msg_invversspec "
 set err_rangevers "$error_msgs: Invalid version range "
 set err_stickyunload "$::error_msgs: Unload of sticky module skipped"
-set warn_stickyunload "$::warn_msgs: Unload of sticky module skipped"
 set err_stickyunloadf "$::warn_msgs: Unload of sticky module forced"
 set err_superstickyunload "$::error_msgs: Unload of super-sticky module skipped"
-set warn_superstickyunload "$::warn_msgs: Unload of super-sticky module skipped"
 set err_reqfull "$::error_msgs: Module version must be specified to load module"
 set err_nomodloaded "$error_msgs: $msg_nomodloaded"
 set err_save_emptyenv "$::error_msgs: Nothing to save in a collection"
@@ -259,10 +257,10 @@ proc err_permdenied {modfile} {
     return "$::error_msgs: Permission denied on '$modfile'"
 }
 
-proc err_accessdenied {mod {extramsg {}} {pad {  }}} {
+proc err_accessdenied {mod {extramsg {}}} {
     set msg "$::error_msgs: Access to module $mod is denied"
     if {$extramsg ne {}} {
-        append msg "\n$pad$extramsg"
+        append msg "\n  $extramsg"
     }
     return $msg
 }
@@ -349,8 +347,8 @@ proc err_extraspecifier {xtspec} {
         specifiers are: always-load append-path chdir complete conflict\
         depends-on envvar family incompat load load-any prepend-path prereq\
         prereq-all prereq-any pushenv remove-path require set-alias\
-        set-function setenv switch switch-on switch-off tag try-load\
-        uncomplete unload unset-alias unset-function unsetenv variant"
+        set-function setenv switch switch-on switch-off try-load uncomplete\
+        unload unset-alias unset-function unsetenv variant"
 }
 
 proc err_xtspec_notallowed {} {

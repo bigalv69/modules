@@ -41,10 +41,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR1)\]\} \{
     module-tag
 \}\""
-    set linenum 13
+    set linenum 11
 } else {
     set custom {}
-    set linenum 14
+    set linenum 12
 }
 set tserr [msg_moderr {No tag specified in argument} {module-tag} $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -56,10 +56,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR2)\]\} \{
     module-tag foo
 \}\""
-    set linenum 16
+    set linenum 14
 } else {
     set custom {}
-    set linenum 17
+    set linenum 15
 }
 set tserr [msg_moderr {No module specified in argument} {module-tag foo} $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -72,10 +72,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR3)\]\} \{
     $errmsg
 \}\""
-    set linenum 19
+    set linenum 17
 } else {
     set custom {}
-    set linenum 20
+    set linenum 18
 }
 set tserr [string map {<EXTMATCH> (.*)+} [escre [msg_moderr {Invalid option '--foo'} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]]]
 testouterr_cmd_re sh {load tag/5.0} $ans $tserr
@@ -88,10 +88,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR4)\]\} \{
     $errmsg
 \}\""
-    set linenum 22
+    set linenum 20
 } else {
     set custom {}
-    set linenum 23
+    set linenum 21
 }
 set tserr [string map {<EXTMATCH> (.*)+} [escre [msg_moderr {Invalid option '--before'} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]]]
 testouterr_cmd_re sh {load tag/5.0} $ans $tserr
@@ -104,10 +104,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR5)\]\} \{
     $errmsg
 \}\""
-    set linenum 25
+    set linenum 23
 } else {
     set custom {}
-    set linenum 26
+    set linenum 24
 }
 set tserr [string map {<EXTMATCH> (.*)+} [escre [msg_moderr {Invalid option '--after'} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]]]
 testouterr_cmd_re sh {load tag/5.0} $ans $tserr
@@ -124,10 +124,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR6)\]\} \{
     $errmsg
 \}\""
-    set linenum 28
+    set linenum 26
 } else {
     set custom {}
-    set linenum 29
+    set linenum 27
 }
 set tserr [msg_moderr {'loaded' is a reserved tag name and cannot be set} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -140,10 +140,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR7)\]\} \{
     $errmsg
 \}\""
-    set linenum 31
+    set linenum 29
 } else {
     set custom {}
-    set linenum 32
+    set linenum 30
 }
 set tserr [msg_moderr {'auto-loaded' is a reserved tag name and cannot be set} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -156,10 +156,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR8)\]\} \{
     $errmsg
 \}\""
-    set linenum 34
+    set linenum 32
 } else {
     set custom {}
-    set linenum 35
+    set linenum 33
 }
 set tserr [msg_moderr {'forbidden' is a reserved tag name and cannot be set} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -172,10 +172,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR9)\]\} \{
     $errmsg
 \}\""
-    set linenum 37
+    set linenum 35
 } else {
     set custom {}
-    set linenum 38
+    set linenum 36
 }
 set tserr [msg_moderr {'nearly-forbidden' is a reserved tag name and cannot be set} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -188,10 +188,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR10)\]\} \{
     $errmsg
 \}\""
-    set linenum 40
+    set linenum 38
 } else {
     set custom {}
-    set linenum 41
+    set linenum 39
 }
 set tserr [msg_moderr {'hidden' is a reserved tag name and cannot be set} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr
@@ -204,10 +204,10 @@ if {[cmpversion $tclsh_version 8.6] == -1} {
 \"if \{\[info exists env(TESTSUITE_MODULE_TAG_ERR11)\]\} \{
     $errmsg
 \}\""
-    set linenum 43
+    set linenum 41
 } else {
     set custom {}
-    set linenum 44
+    set linenum 42
 }
 set tserr [msg_moderr {'hidden-loaded' is a reserved tag name and cannot be set} $errmsg $mp/tag/.modulerc $linenum {  } {} {} $custom]
 testouterr_cmd sh {load tag/5.0} $ans $tserr

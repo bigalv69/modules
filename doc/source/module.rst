@@ -141,10 +141,9 @@ user and *modulefile* specific setups. These files are interpreted as
 Upon invocation of :file:`modulecmd.tcl` module run-command files are sourced
 in the following order:
 
-1. Global RC file(s) as specified by :envvar:`MODULERCFILE` variable or
-   |file etcdir_rc|. If a path element in :envvar:`MODULERCFILE` points to a
-   directory, the :file:`modulerc` file in this directory is used as a global
-   RC file.
+1. Global RC file as specified by :envvar:`MODULERCFILE` variable or
+   |file etcdir_rc|. If :envvar:`MODULERCFILE` points to a directory, the
+   :file:`modulerc` file in this directory is used as global RC file.
 
 2. User specific module RC file :file:`$HOME/.modulerc`
 
@@ -406,7 +405,7 @@ switches are accepted:
  and *variantifspec*.
 
  Accepted elements in *LIST* for :subcmd:`list` sub-command are: *header*,
- *idx*, *variant*, *alias*, *indesym*, *sym*, *tag* and *key*.
+ *idx*, *variant*, *sym*, *tag* and *key*.
 
  The order of the elements in *LIST* does not matter. Module names are the
  only content reported when *LIST* is set to an empty value.
@@ -432,9 +431,6 @@ switches are accepted:
 
     .. versionchanged:: 5.3.1
        Element *indesym* added for :subcmd:`avail` sub-command
-
-    .. versionchanged:: 5.4
-       Elements *alias* and *indesym* added for :subcmd:`list` sub-command
 
 .. option:: --paginate
 
@@ -1201,7 +1197,7 @@ Module Sub-Commands
 
  .. mconfig:: rcfile
 
-  Location of global run-command file(s).
+  Global run-command file location.
 
   This configuration option is unset by default. The :envvar:`MODULERCFILE`
   environment variable is defined by :subcmd:`config` sub-command when
@@ -1311,22 +1307,6 @@ Module Sub-Commands
   time with :instopt:`--prefix` or :instopt:`--etcdir` options. The value of
   this option cannot be altered.
 
- .. mconfig:: sticky_purge
-
-  Error behavior when unloading sticky or super-sticky module during a module
-  :subcmd:`purge`.
-
-  Raise an ``error`` (default) or emit a ``warning`` or be ``silent``. It can
-  be changed at installation time with :instopt:`--with-sticky-purge` option.
-  The :envvar:`MODULES_STICKY_PURGE` environment variable is defined by
-  :subcmd:`config` sub-command when changing this configuration option from
-  its default value. See :envvar:`MODULES_STICKY_PURGE` description for
-  details.
-
-  .. only:: html
-
-     .. versionadded:: 5.4
-
  .. mconfig:: tag_abbrev
 
   Abbreviations to use to report module tags.
@@ -1404,21 +1384,6 @@ Module Sub-Commands
   .. only:: html
 
      .. versionadded:: 4.7
-
- .. mconfig:: unique_name_loaded
-
-  Only one module loaded per module name.
-
-  Default value is ``0``. It can be changed at installation time with
-  :instopt:`--enable-unique-name-loaded` option. The
-  :envvar:`MODULES_UNIQUE_NAME_LOADED` environment variable is defined by
-  :subcmd:`config` sub-command when changing this configuration option from
-  its default value. See :envvar:`MODULES_UNIQUE_NAME_LOADED` description for
-  details.
-
-  .. only:: html
-
-     .. versionadded:: 5.4
 
  .. mconfig:: unload_match_order
 
@@ -2587,15 +2552,15 @@ context. Extra specifiers are an extra query to list available modulefiles
 based on their content definition. They rely on the :ref:`Extra match search`
 mechanism that collects content of available modulefiles.
 
-Extra specifier can be set with the ``element:name[,name,...]`` syntax where
-*element* is a Tcl modulefile command and *name* an item defined by this
-command. Depending on the kind of Tcl modulefile command, *name* can refer to
-an environment variable, a shell alias, a module specification, etc.
+Extra specifier can be set with the ``element:name`` syntax where *element* is
+a Tcl modulefile command and *name* an item defined by this command.
+Depending on the kind of Tcl modulefile command, *name* can refer to an
+environment variable, a shell alias, a module specification, etc.
 
 Supported extra specifier *elements* are:
 
 * ``variant``, ``complete``, ``uncomplete``, ``set-alias``, ``unset-alias``,
-  ``set-function``, ``unset-function``, ``chdir``, ``family``, ``tag``
+  ``set-function``, ``unset-function``, ``chdir``, ``family``
 * ``setenv``, ``unsetenv``, ``append-path``, ``prepend-path``, ``remove-path``
   and ``pushenv``: these elements related to environment variable handling may
   also be aliased ``envvar``
@@ -2618,14 +2583,9 @@ a ``module switch`` command. ``switch`` is an alias that matches both
 ``switch-off`` and ``switch-on`` elements. ``require`` and ``incompat``
 *elements* do not match module commands where ``--not-req`` option is set.
 
-When several *names* are set on one *element* criterion (e.g.,
-``env:PATH,LD_LIBRARY_PATH``), they act as an *OR* operation. Which means
-modules listed in result are those matching any of the *element* *names*
-defined.
-
-When several extra specifiers are set on a module search query (e.g.,
-``env:PATH env:LD_LIBRARY_PATH``), they act as an *AND* operation. Which means
-modules listed in result are those matching all extra specifiers defined.
+When several extra specifiers are set on a module search query, they act as an
+*AND* operation. Which means modules listed in result are those matching all
+extra specifiers defined.
 
 Module specification used as *name* value for some extra specifier *elements*
 may leverage :ref:`Advanced module version specifiers` syntax. However if a
@@ -2643,13 +2603,6 @@ if an unknown extra specifier *element* is defined in search query.
 .. only:: html
 
    .. versionadded:: 5.3
-
-   .. versionchanged:: 5.4
-      Extra specifier ``tag`` added
-
-   .. versionchanged:: 5.4
-      Multiple names may be set on one extra specifier criterion to select
-      modules matching any of these names
 
 
 .. _Module tags:
@@ -2833,11 +2786,6 @@ variant with ``value1`` and ``value2`` as available values. On a module
 selection context, only the last specified value is retained. Which means on
 previous example that ``bar`` variant is set to ``value2``.
 
-When searching for available modules, multiple values may be set on one
-variant criterion, which matches modules that provides any of these variant
-values. For instance ``bar=value1,value2`` will return modules defining a
-``bar`` variant with either ``value1`` or ``value2`` as available value.
-
 Module variants are reported along the module they are associated to on
 :subcmd:`list` sub-command results. They are also reported on :subcmd:`avail`
 sub-command if specified in search query or added to the element to report in
@@ -2866,10 +2814,6 @@ Variant shortcut and color rendering do not apply on JSON output.
       Variants specified in :subcmd:`avail`, :subcmd:`whatis` or
       :subcmd:`paths` search query interpreted to filter results
 
-   .. versionchanged:: 5.4
-      Multiple values may be set on one variant search criterion to select
-      modules providing any of these variant values
-
 
 .. _Extra match search:
 
@@ -2894,8 +2838,8 @@ Extra match search is triggered when:
   to collect variant information then match them against variant specified in
   query
 * :ref:`Extra specifier` is specified in search query: extra match search is
-  triggered to collect commands used in modulefiles or modulercs then match
-  them against extra specifier query
+  triggered to collect commands used in modulefiles then match them against
+  extra specifier query
 
 If search query does not contain an extra query and if variant information
 should not be reported, no extra match search is performed. If search query
@@ -2911,10 +2855,6 @@ evaluation mode.
 Modulefiles tagged *forbidden* are excluded from extra match search
 evaluation. Thus they are excluded from result when this mechanism is
 triggered.
-
-No *scan* modulefile evaluation is performed if search query is only composed
-of ``tag`` extra specifier. Module tags are defined in modulercs thus no
-modulefile evaluation is required to get tags applying to a modulefile.
 
 As extra match search implies additional modulefile evaluations, it is advised
 to build and use :ref:`Module cache` to improve search speed.
@@ -3717,11 +3657,8 @@ ENVIRONMENT
 
 .. envvar:: MODULERCFILE
 
- The location of a global run-command file(s) containing *modulefile* specific
+ The location of a global run-command file containing *modulefile* specific
  setup. See `Modulecmd startup`_ section for detailed information.
-
- Several global run-command files may be defined in this environment variable
- by separating each of them by colon character.
 
  This environment variable value supersedes the default value set in the
  :mconfig:`rcfile` configuration option. It can be defined with the
@@ -4247,12 +4184,9 @@ ENVIRONMENT
 
  Accepted elements that can be set in value list are:
 
- * ``alias``: module aliases targeting loaded modules.
  * ``header``: sentence to introduce the list of loaded modules or to state
    that no modules are loaded currently.
  * ``idx``: index position of each loaded module.
- * ``indesym``: symbolic versions reported independently from the loaded
-   module they are attached to.
  * ``key``: legend appended at the end of the output to explain it.
  * ``variant``: variant values selected for loaded modules.
  * ``sym``: symbolic versions associated with loaded modules.
@@ -4272,9 +4206,6 @@ ENVIRONMENT
 
     .. versionchanged:: 4.8
        Element ``variant`` added
-
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
 
 .. envvar:: MODULES_LIST_TERSE_OUTPUT
 
@@ -4298,9 +4229,6 @@ ENVIRONMENT
 
     .. versionchanged:: 4.8
        Element ``variant`` added
-
-    .. versionchanged:: 5.4
-       Elements ``alias`` and ``indesym`` added
 
 .. envvar:: MODULES_MCOOKIE_CHECK
 
@@ -4611,20 +4539,6 @@ ENVIRONMENT
 
     .. versionadded:: 4.3
 
-.. envvar:: MODULES_STICKY_PURGE
-
- When unloading a sticky or super-sticky module during a module
- :subcmd:`purge`, raise an ``error`` or emit a ``warning`` message or be
- ``silent``.
-
- This environment variable value supersedes the default value set in the
- :mconfig:`sticky_purge` configuration option. It can be defined with the
- :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
-
 .. envvar:: MODULES_TAG_ABBREV
 
  Specifies the abbreviation strings used to report module tags (see `Module
@@ -4709,20 +4623,6 @@ ENVIRONMENT
  .. only:: html
 
     .. versionadded:: 4.7
-
-.. envvar:: MODULES_UNIQUE_NAME_LOADED
-
- If set to ``1``, allows only one module loaded per module name. A conflict is
- raised when loading a module whose name or alternative names are shared by an
- already loaded module.
-
- This environment variable value supersedes the default value set in the
- :mconfig:`unique_name_loaded` configuration option. It can be defined with
- the :subcmd:`config` sub-command.
-
- .. only:: html
-
-    .. versionadded:: 5.4
 
 .. envvar:: MODULES_UNLOAD_MATCH_ORDER
 

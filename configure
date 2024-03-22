@@ -38,8 +38,7 @@ searchmatch modulepath loadedmodules quarantinevars wa277 advversspec ml \
 windowssupport nearlyforbiddendays implicitrequirement tagabbrev \
 tagcolorname mcookieversioncheck availoutput availterseoutput listoutput \
 listterseoutput editor variantshortcut bashcompletiondir fishcompletiondir \
-zshcompletiondir tcllinter tcllinteropts nagelfardatadir nagelfaraddons \
-stickypurge uniquenameloaded"
+zshcompletiondir tcllinter tcllinteropts nagelfardatadir nagelfaraddons"
 libarglist=()
 
 # flags to know if argument has been specified on command-line
@@ -95,7 +94,6 @@ darkbgcolors='hi=1:db=2:tr=2:se=2:er=91:wa=93:me=95:in=94:mp=1;94:di=94:al=96:va
 lightbgcolors='hi=1:db=2:tr=2:se=2:er=31:wa=33:me=35:in=34:mp=1;34:di=34:al=36:va=33:sy=35:de=4:cm=32:aL=107:L=47:H=2:F=101:nF=103:S=106:sS=104:kL=48;5;109'
 termbg=dark
 lockedconfigs=
-uniquenameloaded=n
 unloadmatchorder=returnlast
 searchmatch=starts_with
 icase=search
@@ -118,7 +116,6 @@ windowssupport=n
 nearlyforbiddendays=14
 tagabbrev='auto-loaded=aL:loaded=L:hidden=H:hidden-loaded=H:forbidden=F:nearly-forbidden=nF:sticky=S:super-sticky=sS:keep-loaded=kL'
 tagcolorname=
-stickypurge=error
 mcookieversioncheck=y
 availoutput='modulepath:alias:dirwsym:sym:tag:variantifspec:key'
 availterseoutput='modulepath:alias:dirwsym:sym:tag:variantifspec'
@@ -280,8 +277,6 @@ Optional Features:
   --enable-advanced-version-spec
                           activate the advanced module version specificers to
                           specify finer constraints on module version. [yes]
-  --enable-unique-name-loaded
-                          only allow one module loaded per module name. [no]
   --enable-ml             define \`ml' command when Modules initializes [yes]
   --enable-color          control colored output. \`yes' equals to the \`auto'
                           color mode. \`no' equals to the \`never' color mode
@@ -373,11 +368,6 @@ Optional Packages:
                           the module they are attached to. Each element in
                           TAGLIST is a tag name or abbreviation (elements in
                           TAGLIST are separated by \`:') [$tagcolorname]
-  --with-sticky-purge=VALUE
-                          define the kind of error to render when unloading
-                          a sticky or super-sticky module during a purge.
-                          Raise an \`error' or report a \`warning' or be
-                          \`silent'. [$stickypurge]
   --with-avail-output=LIST
                           specify content to report on avail sub-command
                           regular output. elements accepted in LIST are:
@@ -395,15 +385,15 @@ Optional Packages:
   --with-list-output=LIST
                           specify content to report on list sub-command
                           regular output. elements accepted in LIST are:
-                          \`header', \`idx', \`variant', \`alias', \`indesym',
-                          \`sym', \`tag' and \`key' (elements in LIST are
-                          separated by \`:') [$listoutput]
+                          \`header', \`idx', \`variant', \`sym', \`tag' and
+                          \`key' (elements in LIST are separated by \`:')
+                          [$listoutput]
   --with-list-terse-output=LIST
                           specify content to report on list sub-command terse
                           output. elements accepted in LIST are: \`header',
-                          \`idx', \`variant', \`alias', \`indesym', \`sym',
-                          \`tag' and \`key' (elements in LIST are separated by
-                          \`:') [$listterseoutput]
+                          \`idx', \`variant', \`sym', \`tag' and \`key'
+                          (elements in LIST are separated by \`:')
+                          [$listterseoutput]
   --with-variant-shortcut=SHORTCUTLIST
                           define shortcut characters to specify variant names.
                           Each element in SHORTCUTLIST is a variant name
@@ -660,9 +650,6 @@ for arg in "$@"; do
    --enable-advanced-version-spec*|--disable-advanced-version-spec)
       # shellcheck disable=SC2034
       advversspec=$(get_feature_value "$arg") ;;
-   --enable-unique-name-loaded*|--disable-unique-name-loaded)
-      # shellcheck disable=SC2034
-      uniquenameloaded=$(get_feature_value "$arg") ;;
    --enable-ml*|--disable-ml)
       # shellcheck disable=SC2034
       ml=$(get_feature_value "$arg") ;;
@@ -760,13 +747,6 @@ for arg in "$@"; do
       tagabbrev=$(get_package_value "$arg") ;;
    --with-tag-color-name*|--without-tag-color-name)
       tagcolorname=$(get_package_value "$arg") ;;
-   --with-sticky-purge*|--without-sticky-purge)
-      stickypurge=$(get_package_value "$arg" "error") ;
-      allowedval=" error warning silent " ;
-      if [ "${allowedval// $stickypurge /}" = "$allowedval" ]; then
-         echo_error "Bad value for option \`--with-sticky-purge'"\
-            "Allowed values are:$allowedval"
-      fi ;;
    --with-avail-output*|--without-avail-output)
       availoutput=$(get_package_value "$arg" "$availoutput") ;
       allowedval=" modulepath alias dirwsym indesym sym tag key variant variantifspec " ;
@@ -793,7 +773,7 @@ for arg in "$@"; do
       IFS=$ORIG_IFS ;;
    --with-list-output*|--without-list-output)
       listoutput=$(get_package_value "$arg" "$listoutput") ;
-      allowedval=" header idx variant alias indesym sym tag key " ;
+      allowedval=" header idx variant sym tag key " ;
       ORIG_IFS=$IFS ;
       IFS=: ;
       for val in $listoutput; do
@@ -805,7 +785,7 @@ for arg in "$@"; do
       IFS=$ORIG_IFS ;;
    --with-list-terse-output*|--without-list-terse-output)
       listterseoutput=$(get_package_value "$arg" "$listterseoutput") ;
-      allowedval=" header idx variant alias indesym sym tag key " ;
+      allowedval=" header idx variant sym tag key " ;
       ORIG_IFS=$IFS ;
       IFS=: ;
       for val in $listterseoutput; do

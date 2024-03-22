@@ -455,7 +455,7 @@ proc modVariantCmp {pvrlist modvrlist {missmean 0}} {
       # modulefile and mod is extra specifier defined on command line
    }
    foreach pvr $pvrlist {
-      set pvrarr([lindex $pvr 0]) [lindex $pvr 2]
+      set pvrarr([lindex $pvr 0]) [lindex $pvr 1]
    }
 
    # no match if a specified variant is not found among module variants (and
@@ -636,8 +636,6 @@ proc modEqProc {pattern mod {test equal} {trspec 1} {ismodlo 0} {vrcmp 0}\
    }
    # get alternative names if mod is loading(1) or loaded(2)
    set altlist [switch -- $ismodlo {
-      7 {getLoadedAltname $mod 0 {alias}}
-      6 {getLoadedAltname $mod 0 {sym autosym}}
       5 {getAvailListFromVersSpec $mod}
       4 {getAllModuleResolvedName $mod 0 {} 1}
       3 {getLoadedAltAndSimplifiedName $mod}
@@ -764,8 +762,6 @@ proc modEqProcIcase {pattern mod {test equal} {trspec 1} {ismodlo 0} {vrcmp\
       set endwslash 0
    }
    set altlist [switch -- $ismodlo {
-      7 {getLoadedAltname $mod 0 {alias}}
-      6 {getLoadedAltname $mod 0 {sym autosym}}
       5 {getAvailListFromVersSpec $mod}
       4 {getAllModuleResolvedName $mod 0 {} 1}
       3 {getLoadedAltAndSimplifiedName $mod}
@@ -885,8 +881,6 @@ proc modEqProcExtdfl {pattern mod {test equal} {trspec 1} {ismodlo 0} {vrcmp\
       set endwslash 0
    }
    set altlist [switch -- $ismodlo {
-      7 {getLoadedAltname $mod 0 {alias}}
-      6 {getLoadedAltname $mod 0 {sym autosym}}
       5 {getAvailListFromVersSpec $mod}
       4 {getAllModuleResolvedName $mod 0 {} 1}
       3 {getLoadedAltAndSimplifiedName $mod}
@@ -1022,8 +1016,6 @@ proc modEqProcIcaseExtdfl {pattern mod {test equal} {trspec 1} {ismodlo 0}\
       set endwslash 0
    }
    set altlist [switch -- $ismodlo {
-      7 {getLoadedAltname $mod 0 {alias}}
-      6 {getLoadedAltname $mod 0 {sym autosym}}
       5 {getAvailListFromVersSpec $mod}
       4 {getAllModuleResolvedName $mod 0 {} 1}
       3 {getLoadedAltAndSimplifiedName $mod}
@@ -1302,7 +1294,7 @@ proc parseModuleSpecificationProcAdvVersSpec {mlspec nonamespec xtspec\
    set xtelt_valid_list [list always-load append-path chdir complete conflict\
       depends-on envvar family incompat load load-any prepend-path prereq\
       prereq-all prereq-any pushenv remove-path require set-alias\
-      set-function setenv switch switch-on switch-off tag try-load uncomplete\
+      set-function setenv switch switch-on switch-off try-load uncomplete\
       unload unset-alias unset-function unsetenv variant]
    set xtelt_modspec_list [list always-load conflict depends-on incompat load\
       load-any prereq prereq-all prereq-any require switch switch-on\
@@ -1405,64 +1397,38 @@ proc parseModuleSpecificationProcAdvVersSpec {mlspec nonamespec xtspec\
                # extract extra specifier spec
                set xtsepidx [string first : $curarg]
                set xtelt [string range $curarg 0 $xtsepidx-1]
-               set xtnamelist [split [string range $curarg $xtsepidx+1 end] ,]
+               set xtname [string range $curarg $xtsepidx+1 end]
 
                # check no other : character is found in argument or element
                # and name are not an empty string
-               if {[string length $xtelt] == 0 || [llength $xtnamelist] == 0\
-                  || {} in $xtnamelist || ([string last : $curarg] !=\
-                  $xtsepidx && $xtelt ni $xtelt_modspec_list)} {
+               if {[string length $xtelt] == 0 || [string length $xtname] ==\
+                  0 || ([string last : $curarg] != $xtsepidx && $xtelt ni\
+                  $xtelt_modspec_list)} {
                   knerror "Invalid extra specification '$arg'"
                }
                if {$xtelt ni $xtelt_valid_list} {
                   knerror "Invalid extra specifier '$xtelt'\nValid extra\
                      specifiers are: $xtelt_valid_list"
                }
-               set spec_xt [list $xtelt]
                # parse and resolve module spec set as extra specifier value
                if {$xtelt in $xtelt_modspec_list} {
-                  foreach xtname $xtnamelist {
-                     lassign [parseModuleSpecification 0 0 0 1 {*}$xtname]\
-                        xtname
-                     lappend spec_xt $xtname
-                  }
-               } else {
-                  # For tag extra specifier, resolve each name to get
-                  # corresponding tag name if tag abbreviation set as name
-                  if {$xtelt eq {tag}} {
-                     foreach xtname $xtnamelist {
-                        lappend spec_xt $xtname
-                        if {[set tag [getTagFromAbbrev $xtname]] ne {}} {
-                           lappend spec_xt $tag
-                        }
-                     }
-                  } else {
-                     lappend spec_xt {*}$xtnamelist
-                  }
+                  lassign [parseModuleSpecification 0 0 0 1 {*}$xtname] xtname
                }
-               # save extra specifier element and name value, multiple values
-               # may be set (means OR operator), same element can appear
-               # multiple time (means AND operator)
-               lappend xtlist $spec_xt
+               # save extra specifier element and name value, same element can
+               # appear multiple time (means AND operator)
+               lappend xtlist [list $xtelt $xtname]
             }
             *=* {
                # extract valued-variant spec
                set vrsepidx [string first = $curarg]
                set vrname [string range $curarg 0 $vrsepidx-1]
-               set vrvaluelist [split [string range $curarg $vrsepidx+1 end]\
-                  ,]
-               # value is one empty string
-               if {[llength $vrvaluelist] == 0} {
-                  lappend vrvaluelist {}
-               }
+               set vrvalue [string range $curarg $vrsepidx+1 end]
 
                if {$vrname eq {}} {
                   knerror "No variant name defined in argument '$curarg'"
                }
-               # check no other = character is found in argument and that only
-               # one value is set unless if extra specifier search is enabled
-               if {[string last = $curarg] != $vrsepidx || (!$xtspec &&\
-                  [llength $vrvaluelist] > 1)} {
+               # check no other = character is found in argument
+               if {[string last = $curarg] != $vrsepidx} {
                   knerror "Invalid variant specification '$arg'"
                }
                # replace previous value for variant if already set unless if
@@ -1474,23 +1440,14 @@ proc parseModuleSpecificationProcAdvVersSpec {mlspec nonamespec xtspec\
                   incr vridx
                }
                # translate boolean vrvalue in canonical boolean
-               if {!$vrisbool} {
+               if {!$vrisbool && [string is boolean -strict $vrvalue] &&\
+                  ![string is integer -strict $vrvalue]} {
                   set vrisbool 1
-                  for {set i 0} {$i < [llength $vrvaluelist]} {incr i 1} {
-                     set vrvalue [lindex $vrvaluelist $i]
-                     if {[string is boolean -strict $vrvalue] && ![string is\
-                        integer -strict $vrvalue]} {
-                        lset vrvaluelist $i [string is true -strict $vrvalue]
-                     } else {
-                        # consider variant not a boolean as soon as one value
-                        # set is not a boolean
-                        set vrisbool 0
-                     }
-                  }
+                  set vrvalue [string is true -strict $vrvalue]
                }
                # save variant name and value
                set vrnamearr($vrname) $vridx
-               lappend vrlist [list $vrname $vrisbool {*}$vrvaluelist]
+               lappend vrlist [list $vrname $vrvalue $vrisbool]
             }
             default {
                # save previous mod version spec and transformed arg if any
@@ -1763,23 +1720,6 @@ proc getExtraListFromVersSpec {modarg} {
       set extralist {}
    }
    return $extralist
-}
-
-# translate module name version spec to return list of tag specifier and list
-# of other extra specifier
-proc getSplitExtraListFromVersSpec {modarg} {
-   set taglist {}
-   set otherlist {}
-   if {[info exists ::g_moduleVersSpec($modarg)]} {
-      foreach spec_xt [lindex $::g_moduleVersSpec($modarg) 10] {
-         if {[lindex $spec_xt 0] eq {tag}} {
-            lappend taglist $spec_xt
-         } else {
-            lappend otherlist $spec_xt
-         }
-      }
-   }
-   return [list $taglist $otherlist]
 }
 
 # get available modules matching module specification

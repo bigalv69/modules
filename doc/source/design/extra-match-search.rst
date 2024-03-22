@@ -219,16 +219,6 @@ specifiers and their associated modulefile command.
 |                    | incompat                                |
 +--------------------+-----------------------------------------+
 
-+--------------------+-----------------------------------------+
-| Modulerc command   | Extra specifier(s)                      |
-+====================+=========================================+
-| module-tag         | tag                                     |
-+--------------------+-----------------------------------------+
-| module-hide        | tag                                     |
-+--------------------+-----------------------------------------+
-| module-forbid      | tag                                     |
-+--------------------+-----------------------------------------+
-
 Extra specifier are only valid on *return all matching modules* context. An
 error is returned when used in query on other contexts.
 
@@ -261,8 +251,8 @@ other element corresponds to the list of values provided to this argument.
 For example, search query ``mod/1.0 setenv:FOO variant:bar setenv:BAR``
 produces internal representation ``{setenv FOO} {variant bar} {setenv BAR}``.
 
-Another example with multiple values, search query ``mod/1.0 setenv:FOO,BAR``
-produces internal representation ``{setenv FOO BAR}``.
+When *OR* operation will be supported, search query ``mod/1.0 setenv:FOO,BAR``
+will produce internal representation ``{setenv FOO BAR}``.
 
 Value specified may contain a space character if it is escaped on command line
 either by quotes (``"prereq:mod@1.0 foo=bar"``) or backslash
@@ -298,10 +288,6 @@ listed as value in every matched nested keys.
 When there are several extra specifiers in search query, result are the
 modules present in the value list of every matched keys (intersection of value
 list obtained for every extra specifier criterion).
-
-Module tags, queried with *tag* extra specifier, are not recorded in the
-same structure than other extra specifier. Regular tag mechanism and recording
-structure is used.
 
 Specific filtering work is achieved for extra specifiers accepting a module
 specification. See next section.
@@ -399,14 +385,15 @@ characters are taken into account (they are treated literally).
 
 An error is raised when an empty extra specifier name or value is specified.
 
-Expressing an *OR* operation
+FUTURE: expressing an *OR* operation
 
 * for instance by mentioning multiple values separated by ``,`` character
 * ``module avail mod/1.0 foo=val1,val2 bar=val2``
 * means *foo* equals *val1* or *val2* and *bar* equals *val2*
 * such syntax is equivalent to version list specification
 * does not seem useful to allow ranges like for version
-* Such syntax is only allowed for *return all matching  modules* context
+* FIXME: allow such syntax on any context or only for *return all matching
+  modules* context?
 
 FUTURE: expressing a *NOT* operation
 

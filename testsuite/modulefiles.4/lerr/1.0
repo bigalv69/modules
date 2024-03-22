@@ -1,0 +1,68 @@
+#%Module
+if {[info exists env(TESTSUITE_ABORT_ON_ERROR)]} {
+    switch -- $env(TESTSUITE_ABORT_ON_ERROR) {
+        load_last_bad - load_last_forbidden - load_last_hard_hidden {
+            module load foo/1.0 err/1.0
+        }
+        load_first_bad - load_first_break - load_first_exit - load_first_forbidden - load_first_hard_hidden {
+            module load err/1.0 foo/1.0
+        }
+        load-any_first_bad - load-any_first_break - load-any_first_exit - load-any_first_forbidden - load-any_first_hard_hidden {
+            module load-any err/1.0 foo/1.0
+        }
+        try-load_last_bad - try-load_last_forbidden - try-load_last_hard_hidden {
+            module try-load foo/1.0 err/1.0
+        }
+        try-load_first_bad - try-load_first_break - try-load_first_exit - try-load_first_forbidden - try-load_first_hard_hidden {
+            module try-load err/1.0 foo/1.0
+        }
+        load_last_not_found {
+            module load foo/1.0 unk/1.0
+        }
+        load_first_not_found {
+            module load unk/1.0 foo/1.0
+        }
+        load-any_first_not_found {
+            module load-any unk/1.0 foo/1.0
+        }
+        try-load_last_not_found {
+            module try-load foo/1.0 unk/1.0
+        }
+        try-load_first_not_found {
+            module try-load unk/1.0 foo/1.0
+        }
+        unload_last_bad {
+            module unload foo/1.0 err/1.0
+        }
+        unload_first_bad - unload_first_break - unload_first_exit {
+            module unload err/1.0 foo/1.0
+        }
+        reqlo_load_error - urequn_unload_error {
+            prereq err/1.0
+        }
+        urequn_load_error {
+            module load err/1.0
+        }
+        conun_load_error {
+            module unload err/1.0
+        }
+        switch_unload_bad {
+            module switch err/1.0 foo/1.0
+        }
+        switch_both_error {
+            module switch err/1.0 err/1.1
+        }
+        switch_depre_break - switch_depun_break {
+            module switch foo/1.0 setenv/1.0
+        }
+        switch_forbidden {
+            module switch foo/1.0 err/1.0
+        }
+        switch_sticky  - switch_not_loaded - switch_already_loaded - switch_super-sticky {
+            module switch err/1.0 foo/1.0
+        }
+        unload_switch_error {
+            module switch foo/1.0 err/1.0
+        }
+    }
+}
